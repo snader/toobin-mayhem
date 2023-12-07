@@ -1,0 +1,5 @@
+﻿  make: C:\emsdk\mingw\4.6.2_32bit\mingw32-make.EXE raylib_game
+  mingw32-make.EXE: *** No rule to make target `raylib_game'.  Stop.
+emmake : error : 'C:\emsdk\mingw\4.6.2_32bit\mingw32-make.EXE raylib_game' failed (returned 2)
+D:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(151,5): error MSB3073: The command "emmake make raylib_game
+D:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(151,5): error MSB3073: :VCEnd" exited with code 1.
