@@ -12,6 +12,7 @@
 ********************************************************************************************/
 
 #include "raylib.h"
+#include "enemies.h"
 
 #if defined(PLATFORM_WEB)
     #define CUSTOM_MODAL_DIALOGS            // Force custom modal dialogs usage
@@ -21,7 +22,7 @@
 #include <stdio.h>                          // Required for: printf()
 #include <stdlib.h>                         // Required for: 
 #include <string.h>                         // Required for: 
-#include <time.h>
+#include <stddef.h>
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
@@ -42,20 +43,11 @@
 // GameScreen Definition
 typedef enum { 
     SCREEN_LOGO = 0, 
-    SCREEN_TITLE, 
-    SCREEN_GAMEPLAY, 
-    SCREEN_ENDING
+    SCREEN_TITLE = 1, 
+    SCREEN_GAMEPLAY = 2, 
+    SCREEN_ENDING = 3
 } GameScreen;
 
-// Enemy Definition
-typedef struct {
-    int id;
-    int x;
-    int y;    
-    float degrees;
-    int frame;
-    int isAlive;
-} Enemy;
 
 // TODO: Define your custom data types here
 
@@ -74,14 +66,16 @@ static int frameCount = 0;
 
 static RenderTexture2D target = { 0 };  // Initialized at init
 
+static GameScreen currentScreen = SCREEN_LOGO;
+
 // 
 static const int DEAD = 0;
 static const int ALIVE = 1;
 
 // Player sprite
-static Texture2D spriteSheetPlayer;
-static int frameWidthPlayer = 26;
-static int frameHeightPlayer = 25;
+Texture2D spriteSheetPlayer;
+int frameWidthPlayer = 26;
+int frameHeightPlayer = 25;
 static int frameCountPlayer = 11;
 static Rectangle frameRecPlayer[11];  // Assuming 11 frames
 
@@ -98,7 +92,10 @@ Enemy* enemies = NULL;  // Declare a pointer to Enemy
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
 static void UpdateDrawFrame(void);      // Update and Draw one frame
-static void DrawEnemies(Enemy enemies[], size_t size);
+static void UpdateGameplayScreen(void);
+static void UpdateLogoScreen(void);
+static void UpdateTitleScreen(void);
+static void UpdateEndingScreen(void);
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -108,13 +105,15 @@ int main(void)
 #if !defined(_DEBUG)
     SetTraceLogLevel(LOG_NONE);         // Disable raylib trace log messsages
 #endif
+
+   // GameScreen currentScreen = SCREEN_GAMEPLAY;
   
     // Initialize enemies array
-    enemies = (Enemy*)malloc(50 * sizeof(Enemy));  // Assuming initial size is 3
+    enemies = (Enemy*)malloc(50 * sizeof(Enemy));  // Assuming initial size is 50
     enemies[0] = (Enemy){1, 10, 20, 30.0f, 0, ALIVE};
     enemies[1] = (Enemy){2, 30, 40, 60.0f, 0, ALIVE};
     enemies[2] = (Enemy){3, 50, 60, 90.0f, 0, ALIVE};
-    enemies[3] = (Enemy){4, 70, 80, 120.0f, 0, ALIVE};  // Assign values to the new enemy
+    enemies[3] = (Enemy){4, 70, 80, 120.0f, 0, ALIVE}; 
 
       
     // Initialization
@@ -192,14 +191,35 @@ void UpdateDrawFrame(void)
     // Screen scale logic (x2)
     if (IsKeyPressed(KEY_ONE)) screenScale = 1;
     else if (IsKeyPressed(KEY_TWO)) screenScale = 2;
-    else if (IsKeyPressed(KEY_THREE)) screenScale = 3;
-    
+    else if (IsKeyPressed(KEY_THREE)) screenScale = 3;   
     if (screenScale != prevScreenScale)
     {
-        // Scale window to fit the scaled render texture
         SetWindowSize(screenWidth*screenScale, screenHeight*screenScale);                       
         prevScreenScale = screenScale;
     }
+    
+    // KEYS PRESSED
+    if (IsKeyPressed(KEY_SPACE)){
+        switch (currentScreen) {
+            case SCREEN_LOGO:
+                currentScreen = SCREEN_TITLE;
+                break;
+            case SCREEN_TITLE:
+                currentScreen = SCREEN_GAMEPLAY;   
+                break;
+            case SCREEN_GAMEPLAY:
+                
+                break;
+            case SCREEN_ENDING:
+                
+                break;
+            default:
+                currentScreen = SCREEN_TITLE;   
+                break;
+        }
+    }
+    
+    
 
     // Update variables / Implement example logic at this point 
     if (frameCount % 30 == 0) {
@@ -208,31 +228,31 @@ void UpdateDrawFrame(void)
 
     
     //----------------------------------------------------------------------------------
-
     // Draw
     //----------------------------------------------------------------------------------
     // Render all screen to texture (for scaling)
     BeginTextureMode(target);
         ClearBackground(RAYWHITE);
         
-        // Draw water
-        for (int y = 0; y < 256; y=y+16) {
-            for (int x = 0; x < 256; x=x+16) {
-                DrawTextureRec(spriteSheetWater, frameRecWater[waterFrame], (Vector2) { x, y }, WHITE);
-            }
+        
+        switch (currentScreen) {
+            case SCREEN_LOGO:
+                UpdateLogoScreen();
+                break;
+            case SCREEN_TITLE:
+                UpdateTitleScreen();
+                break;
+            case SCREEN_GAMEPLAY:
+                UpdateGameplayScreen();
+                break;
+            case SCREEN_ENDING:
+                UpdateEndingScreen();
+                break;
+            default:
+                // Handle invalid screen or default case
+                break;
         }
-        
-        
-        // debug output stuff
-        //DrawText(TextFormat("waterFrame: %d", waterFrame), 10, 10, 20, WHITE);
-
-        // Draw the current player frame
-        DrawTextureRec(spriteSheetPlayer, frameRecPlayer[0], (Vector2) { 120, 150 }, WHITE);
-        
-        
-        // DrawEnemies
-        DrawEnemies(enemies, sizeof(enemies));
-       
+              
         
     EndTextureMode();
     
@@ -248,45 +268,53 @@ void UpdateDrawFrame(void)
         }
 
         // TODO: Draw everything that requires to be drawn at this point:
+        
 
     EndDrawing();
     //----------------------------------------------------------------------------------  
+    
+    
+        
+    
+}
+
+// *************
+// Functions ***
+// *************
+
+void UpdateGameplayScreen(void) {
+    // Update logic for the gameplay screen...
+    //DrawText(TextFormat("In game: %d", SCREEN_GAMEPLAY), 10, 10, 20, WHITE);
+    
+    
+    // Draw water
+        for (int y = 0; y < 256; y=y+16) {
+            for (int x = 0; x < 256; x=x+16) {
+                DrawTextureRec(spriteSheetWater, frameRecWater[waterFrame], (Vector2) { x, y }, WHITE);
+            }
+        }
+        
+        // Draw the current player frame
+        DrawTextureRec(spriteSheetPlayer, frameRecPlayer[0], (Vector2) { 120, 150 }, WHITE);      
+        
+        // DrawEnemies
+        DrawEnemies(enemies, sizeof(enemies));
+        
+        DrawText("Game", 10, 10, 20, GREEN);
 }
 
 
-//----------------------------------------------------------------------------------  
-// Update and draw enemies
-//----------------------------------------------------------------------------------  
-void DrawEnemies(Enemy enemies[], size_t size) {
-    // Using a for loop for structure iteration
+// Define update functions for each screen
+void UpdateLogoScreen(void) {
+    // Update logic for the logo screen...
+    DrawText("Logo", 10, 10, 20, RED);
+}
 
-        //printf("ID: %d, X: %d, Y: %d, Alive: %d\n", enemies[i].id, enemies[i].x, enemies[i].y, enemies[i].isAlive);
-        
-                //DrawTextureRec(spriteSheetPlayer, frameRecPlayer[enemies[i].frame], (Vector2) { enemies[i].x, enemies[i].y }, WHITE);
-            for (size_t i = 0; i < size; ++i) {
-                
-                enemies[i].degrees++;
-                
-                if (enemies[i].isAlive==1) {
-                
-                    Rectangle sourceRec = {enemies[i].frame * frameWidthPlayer, 0, frameWidthPlayer, frameHeightPlayer};
-                    Vector2 origin = {frameWidthPlayer / 2, frameHeightPlayer / 2}; // Set the origin to the center of the sprite
+void UpdateTitleScreen(void) {
+    // Update logic for the title screen...
+    DrawText("Title", 10, 10, 20, RED);
+}
 
-                    DrawTexturePro(
-                        spriteSheetPlayer,
-                        sourceRec,
-                        (Rectangle){enemies[i].x, enemies[i].y, frameWidthPlayer, frameHeightPlayer},
-                        origin,
-                        enemies[i].degrees, // Replace with the desired rotation angle (5 degrees in this case)
-                        WHITE
-                    );
-                
-                }
-            }
-                
-                
-        
-    
-    
-    
+void UpdateEndingScreen(void) {
+    // Update logic for the ending screen...
 }
