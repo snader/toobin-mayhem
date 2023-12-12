@@ -25,6 +25,7 @@
 #include <string.h>                         // Required for: 
 #include <stddef.h>
 
+
 //----------------------------------------------------------------------------------
 // Defines and Macros
 //----------------------------------------------------------------------------------
@@ -72,6 +73,8 @@ Texture2D spriteSheetWater;
 Rectangle frameRecWater[4]; 
 int waterFrame = 0;
 
+Sound splashSfx;
+
 
 // Array of enemies
 Sprite* enemies = NULL;  // Declare a pointer to Sprite
@@ -90,7 +93,14 @@ int main(void)
 #if !defined(_DEBUG)
     SetTraceLogLevel(LOG_NONE);         // Disable raylib trace log messsages
 #endif
-  
+
+InitAudioDevice();
+
+    // soundfx    
+    splashSfx = LoadSound("resources/splash1.wav");
+    
+    //PlaySound(splashSfx);
+    
     // Initialize enemies array
     enemies = (Sprite*)malloc(50 * sizeof(Sprite));  // Assuming initial size is 50
     //enemies[0] = (Sprite){1, 10, 20, 30.0f, 0, ALIVE};
@@ -98,7 +108,7 @@ int main(void)
     //enemies[2] = (Sprite){3, 50, 60, 90.0f, 0, ALIVE};
     //enemies[3] = (Sprite){4, 70, 80, 120.0f, 0, ALIVE}; 
     
-    player = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, ALIVE};
+    player = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, ALIVE};
  
       
     // Initialization
@@ -148,7 +158,9 @@ int main(void)
     UnloadTexture(spriteSheetPlayer);
     UnloadTexture(spriteSheetWater);
     
+        UnloadSound(splashSfx);
     
+    CloseAudioDevice();   
 
     CloseWindow();        // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

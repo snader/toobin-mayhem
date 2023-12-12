@@ -100,7 +100,7 @@ void UpdateGameplayScreen(void) {
     //if (IsKeyDown(KEY_LEFT)) player.degrees -= 1.0f;
          
 
-    UpdateSprite(&player);
+    UpdatePlayerSprite(&player);
      
     
     
@@ -116,7 +116,7 @@ void UpdateGameplayScreen(void) {
        
     // Draw Sprites
     //DrawEnemies(enemies, sizeof(enemies));
-    DrawSprite(&player);
+    DrawPlayerSprite(&player);
     
     DrawText("Game", 10, 10, 20, GREEN);
         

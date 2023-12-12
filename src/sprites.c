@@ -1,12 +1,14 @@
 // sprites.c
 
 #include "sprites.h"
+#include <math.h>
 
 // Include necessary declarations from main.c
 extern Texture2D spriteSheetPlayer;
 extern int frameWidthPlayer;
 extern int frameHeightPlayer;
 extern float frameCountPlayer;
+extern Sound splashSfx;
 extern Rectangle frameRecPlayer[];
 
 /*
@@ -31,8 +33,31 @@ void DrawEnemies(Sprite enemies[], size_t size) {
 }
 */
 
-void DrawSprite(Sprite *sprite) {
-    Rectangle sourceRec = {sprite->frame * frameWidthPlayer, 0, frameWidthPlayer, frameHeightPlayer};
+void DrawPlayerSprite(Sprite *sprite) {
+    
+    sprite->drawFrame = sprite->frame;
+    if (IsKeyDown(KEY_LEFT)) {
+        if (sprite->frame==1) {
+            sprite->drawFrame = 3;
+        }
+        if (sprite->frame==2) {
+            sprite->drawFrame = 4;
+        }
+    }
+    if (IsKeyDown(KEY_RIGHT)) {
+        if (sprite->frame==1) {
+            sprite->drawFrame = 5;
+        }
+        if (sprite->frame==2) {
+            sprite->drawFrame = 6;
+        }
+    }
+    
+    if (sprite->frame==1) {
+        //PlaySound(splashSfx);
+    }
+    
+    Rectangle sourceRec = {sprite->drawFrame * frameWidthPlayer, 0, frameWidthPlayer, frameHeightPlayer};
     Vector2 origin = {frameWidthPlayer / 2, frameHeightPlayer / 2}; // Set the origin to the center of the sprite  
 
     DrawTexturePro(
@@ -46,18 +71,45 @@ void DrawSprite(Sprite *sprite) {
 }
 
 
-void UpdateSprite(Sprite *sprite) {
+void UpdatePlayerSprite(Sprite *sprite) {
     
-    if (IsKeyDown(KEY_UP)) {
-        sprite->speed += 0.04f;
-    } else if (IsKeyDown(KEY_DOWN)) {
-        sprite->speed -= 0.04f;
+    if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_DOWN)) {
+        
+        sprite->frameDelay++;
+        if (sprite->frameDelay>10) {
+            if (IsKeyDown(KEY_UP)) {
+                sprite->frame--;
+            } else if (IsKeyDown(KEY_DOWN)) {
+                sprite->frame++;
+            }
+            
+            sprite->frameDelay=0;
+        }
+        
+        if (sprite->frame>2) {
+            sprite->frame = 0;
+        }
+        if (sprite->frame<0) {
+            sprite->frame = 2;
+        }
+        if (sprite->frame<0) {}
+        if (sprite->frame==1) {
+            if (IsKeyDown(KEY_UP)) {
+                sprite->speed += 0.04f;
+            } else if (IsKeyDown(KEY_DOWN)) {
+                sprite->speed -= 0.04f;
+            }
+        }
+        
+        
     }
-
-    if (IsKeyDown(KEY_LEFT)) {
-        sprite->degrees -= 1.0f;
-    } else if (IsKeyDown(KEY_RIGHT)) {
-        sprite->degrees += 1.0f;
+    
+    if (sprite->speed < -0.02f || sprite->speed > 0.02f){
+        if (IsKeyDown(KEY_LEFT)) {
+            sprite->degrees -= 1.0f;
+        } else if (IsKeyDown(KEY_RIGHT)) {
+            sprite->degrees += 1.0f;
+        }
     }
     
     if (sprite->degrees > 360) {
@@ -69,8 +121,8 @@ void UpdateSprite(Sprite *sprite) {
     if (sprite->speed>1.0f) {
         sprite->speed=1.0f;
     }
-    if (sprite->speed<-1.5f) {
-        sprite->speed=-1.5f;
+    if (sprite->speed<-1.0f) {
+        sprite->speed=-1.0f;
     }
     
     if (sprite->speed>0) {

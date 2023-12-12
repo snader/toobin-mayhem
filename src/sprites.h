@@ -16,13 +16,15 @@ typedef struct {
     float degrees;
     float speed;
     int frame;
+    int frameDelay;
     int isAlive;
+    int drawFrame;
 } Sprite;
 
 // Function declaration
 // Draw enemies
-void DrawSprites(Sprite enemies[], size_t size);
-void UpdateSprite(Sprite *sprite);
+void DrawPlayerSprite(Sprite *sprite);
+void UpdatePlayerSprite(Sprite *sprite);
 
 
 #endif // ENEMIES_H
