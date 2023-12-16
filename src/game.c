@@ -116,7 +116,10 @@ void UpdateGameplayScreen(void) {
        
     // Draw Sprites
     //DrawEnemies(enemies, sizeof(enemies));
+    
     DrawPlayerSprite(&player);
+    
+    //DrawText(TextFormat("ripples: %f", sizeof(ripples) / sizeof(ripples[0])), 100, 130, 20, WHITE);
     
     DrawText("Game", 10, 10, 20, GREEN);
         

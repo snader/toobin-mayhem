@@ -22,9 +22,12 @@ typedef struct {
 } Sprite;
 
 // Function declaration
-// Draw enemies
+// Draw sprites
 void DrawPlayerSprite(Sprite *sprite);
 void UpdatePlayerSprite(Sprite *sprite);
+void DrawRipples(Sprite ripples[], size_t size);
+void NewRipple(Sprite ripples[], size_t size, int x, int y);
 
 
-#endif // ENEMIES_H
+
+#endif // $PRITES_H

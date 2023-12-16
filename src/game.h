@@ -25,7 +25,7 @@ extern Texture2D spriteSheetWater;
 extern Rectangle frameRecWater[4];
 extern Texture2D spriteSheetPlayer;
 extern Rectangle frameRecPlayer[11];
-extern Sprite* enemies;
+extern Sprite* ripples;
 extern Sprite player;
 
 // Include raylib header

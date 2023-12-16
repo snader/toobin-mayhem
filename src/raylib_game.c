@@ -53,6 +53,8 @@ unsigned int prevScreenScale = 1;
 
 int frameCount = 0;
 
+int myCount=0;
+
 RenderTexture2D target = { 0 };  // Initialized at init
 
 // NOTE! replace SCREEN_GAMEPLAY before release
@@ -73,8 +75,13 @@ Texture2D spriteSheetWater;
 Rectangle frameRecWater[4]; 
 int waterFrame = 0;
 
-Sound splashSfx;
+Texture2D spriteSheetRipple;
+Rectangle frameRecRipple[4]; 
+// Array of enemies
+Sprite* ripples = NULL;  // Declare a pointer to Enemy
 
+Sound splashSfxL;
+Sound splashSfxR;
 
 // Array of enemies
 Sprite* enemies = NULL;  // Declare a pointer to Sprite
@@ -97,38 +104,53 @@ int main(void)
 InitAudioDevice();
 
     // soundfx    
-    splashSfx = LoadSound("resources/splash1.wav");
+    splashSfxL = LoadSound("resources/splashLow.wav");
+    splashSfxR = LoadSound("resources/splashHigh.wav");
     
     //PlaySound(splashSfx);
     
     // Initialize enemies array
     enemies = (Sprite*)malloc(50 * sizeof(Sprite));  // Assuming initial size is 50
-    //enemies[0] = (Sprite){1, 10, 20, 30.0f, 0, ALIVE};
+    ripples = (Sprite*)malloc(50 * sizeof(Sprite));
+    
     //enemies[1] = (Sprite){2, 30, 40, 60.0f, 0, ALIVE};
     //enemies[2] = (Sprite){3, 50, 60, 90.0f, 0, ALIVE};
     //enemies[3] = (Sprite){4, 70, 80, 120.0f, 0, ALIVE}; 
     
     player = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, ALIVE};
  
+    ripples[0] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
+    ripples[1] = (Sprite){1, 130, 100, 0.0f, 0.0f, 0, 0, DEAD};
+    ripples[2] = (Sprite){1, 150, 100, 0.0f, 0.0f, 0, 0, DEAD};
+    ripples[3] = (Sprite){1, 160, 100, 0.0f, 0.0f, 0, 0, DEAD};
+    ripples[4] = (Sprite){1, 180, 130, 0.0f, 0.0f, 0, 0, DEAD};
       
     // Initialization
     //--------------------------------------------------------------------------------------
     InitWindow(screenWidth, screenHeight, "Toobin' Mayhem");
     
     // Load resources / Initialize variables at this point
-    spriteSheetPlayer = LoadTexture("resources/player.png"); 
+    
+    spriteSheetPlayer = LoadTexture("resources/player2.png"); 
     for (int i = 0; i < frameCountPlayer; i++) {
         frameRecPlayer[i].x = i * frameWidthPlayer;  // Adjust based on your sprite sheet layout
         frameRecPlayer[i].y = 0;
         frameRecPlayer[i].width = frameWidthPlayer;
         frameRecPlayer[i].height = frameHeightPlayer;
     }
-    spriteSheetWater = LoadTexture("resources/water.png"); 
+    spriteSheetWater = LoadTexture("resources/water2.png"); 
     for (int i = 0; i < 4; i++) {
         frameRecWater[i].x = i * 16;  // Adjust based on your sprite sheet layout
         frameRecWater[i].y = 0;
         frameRecWater[i].width = 16;
         frameRecWater[i].height = 16;
+    }  
+    spriteSheetRipple = LoadTexture("resources/ripple.png");
+    for (int i = 0; i < 4; i++) {
+        frameRecRipple[i].x = i * 11;  // Adjust based on your sprite sheet layout
+        frameRecRipple[i].y = 0;
+        frameRecRipple[i].width = 1;
+        frameRecRipple[i].height = 1;
     }  
     
     // Render texture to draw full screen, enables screen scaling
@@ -158,7 +180,10 @@ InitAudioDevice();
     UnloadTexture(spriteSheetPlayer);
     UnloadTexture(spriteSheetWater);
     
-        UnloadSound(splashSfx);
+        UnloadSound(splashSfxR);
+        UnloadSound(splashSfxL);
+        
+        free(ripples);
     
     CloseAudioDevice();   
 

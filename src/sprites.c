@@ -5,11 +5,18 @@
 
 // Include necessary declarations from main.c
 extern Texture2D spriteSheetPlayer;
+extern Texture2D spriteSheetRipple;
 extern int frameWidthPlayer;
 extern int frameHeightPlayer;
 extern float frameCountPlayer;
-extern Sound splashSfx;
+extern Sound splashSfxL;
+extern Sound splashSfxR;
 extern Rectangle frameRecPlayer[];
+extern int DEAD;
+extern int ALIVE;
+extern Sprite* ripples;
+extern int frameCount;
+extern int myCount;
 
 /*
 void DrawEnemies(Sprite enemies[], size_t size) {
@@ -35,6 +42,10 @@ void DrawEnemies(Sprite enemies[], size_t size) {
 
 void DrawPlayerSprite(Sprite *sprite) {
     
+    int tempx, tempy;
+    
+    DrawRipples(ripples, sizeof(ripples));
+    
     sprite->drawFrame = sprite->frame;
     if (IsKeyDown(KEY_LEFT)) {
         if (sprite->frame==1) {
@@ -53,8 +64,24 @@ void DrawPlayerSprite(Sprite *sprite) {
         }
     }
     
-    if (sprite->frame==1) {
-        //PlaySound(splashSfx);
+    
+            
+        
+    
+    
+    if (sprite->drawFrame==1 || sprite->drawFrame==5) {
+        
+               
+        // right ripple
+        tempx = sprite->x - cos(sprite->degrees * DEG2RAD) * 12;
+        tempy = sprite->y - sin(sprite->degrees * DEG2RAD) * 11;
+        NewRipple(ripples, sizeof(ripples), tempx, tempy);
+    }
+    if (sprite->drawFrame==1 || sprite->drawFrame==3) {
+        // left ripple
+        tempx = sprite->x + cos(sprite->degrees * DEG2RAD) * 12;
+        tempy = sprite->y + sin(sprite->degrees * DEG2RAD) * 11;
+        NewRipple(ripples, sizeof(ripples), tempx, tempy);
     }
     
     Rectangle sourceRec = {sprite->drawFrame * frameWidthPlayer, 0, frameWidthPlayer, frameHeightPlayer};
@@ -68,6 +95,30 @@ void DrawPlayerSprite(Sprite *sprite) {
         sprite->degrees,
         WHITE
     );
+    
+        // above player, tonen als y>0 en/of x>0
+        Vector2 circlePos;
+        circlePos.x = sprite->x + sin(sprite->degrees * DEG2RAD) * 16;
+        circlePos.y = sprite->y - cos(sprite->degrees * DEG2RAD) * 16;
+        // Draw the rotating circle below the sprite
+        //DrawCircleV(circlePos, 2, WHITE);
+        
+        // right
+        circlePos.x = sprite->x + cos(sprite->degrees * DEG2RAD) * 12;
+        circlePos.y = sprite->y + sin(sprite->degrees * DEG2RAD) * 11;
+        //DrawCircleV(circlePos, 2, WHITE);
+        
+        // left
+        circlePos.x = sprite->x - cos(sprite->degrees * DEG2RAD) * 12;
+        circlePos.y = sprite->y - sin(sprite->degrees * DEG2RAD) * 11;       
+        //DrawCircleV(circlePos, 2, WHITE);
+        
+        // below player, tonen als y<0 en/of x<0
+        
+        //circlePos.x = sprite->x - sin(sprite->degrees * DEG2RAD) * 16;
+        //circlePos.y = sprite->y + cos(sprite->degrees * DEG2RAD) * 16;
+        // Draw the rotating circle below the sprite
+        //DrawCircleV(circlePos, 2, WHITE);
 }
 
 
@@ -84,6 +135,16 @@ void UpdatePlayerSprite(Sprite *sprite) {
             }
             
             sprite->frameDelay=0;
+            
+            if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_DOWN)) {
+                
+                if (sprite->frame == 1) {                
+                    PlaySound(splashSfxL);                                  
+                } 
+                
+            }
+        
+            
         }
         
         if (sprite->frame>2) {
@@ -112,6 +173,10 @@ void UpdatePlayerSprite(Sprite *sprite) {
         }
     }
     
+    if (!IsKeyDown(KEY_DOWN) && !IsKeyDown(KEY_UP) && !IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT)) {
+        sprite->frame = 0;
+    }
+    
     if (sprite->degrees > 360) {
       sprite->degrees = 0.0f;
     } else if (sprite->degrees < 0) {
@@ -134,10 +199,59 @@ void UpdatePlayerSprite(Sprite *sprite) {
        
     sprite->x += sprite->speed * sin(sprite->degrees * DEG2RAD);
     sprite->y += sprite->speed * -cos(sprite->degrees * DEG2RAD);
-    
-    
+        
     // Clamp the sprite within the screen bounds
     sprite->x = fmin(fmax(sprite->x, 0), GetScreenWidth() - 1);
     sprite->y = fmin(fmax(sprite->y, 0), GetScreenHeight() - 1); 
     
 }
+
+void DrawRipples(Sprite ripples[], size_t size) {
+    for (size_t i = 0; i < size; ++i) {
+               
+               
+               
+        if (ripples[i].isAlive == ALIVE) {
+            
+            ripples[i].drawFrame = (ripples[i].frame / 10) % 4;
+            
+            Rectangle sourceRec = {ripples[i].drawFrame * 11, 0, 11, 11}; // 
+            Vector2 origin = {11 / 2, 11 / 2}; // Set the origin to the center of the sprite
+
+            DrawTexturePro(
+                spriteSheetRipple,
+                sourceRec,
+                (Rectangle){ripples[i].x, ripples[i].y, 11, 11},
+                origin,
+                ripples[i].degrees,
+                WHITE
+            );           
+            
+            ripples[i].frame++;
+            
+            if (ripples[i].frame>30) {
+                ripples[i].isAlive = DEAD;
+                ripples[i].frame=0;
+            }
+            
+        }
+        
+        
+    }
+}
+
+void NewRipple(Sprite ripples[], size_t size, int x, int y) {
+    for (size_t i = 0; i < size; ++i) {
+        // reuse dead ripple
+        
+        
+        if (ripples[i].isAlive == DEAD) {
+            ripples[i].isAlive = ALIVE;
+            ripples[i].x = x;
+            ripples[i].y = y;
+            ripples[i].frame = 0;
+            break;
+        }
+    }
+}
+
