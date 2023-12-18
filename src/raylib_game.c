@@ -74,14 +74,19 @@ Rectangle frameRecPlayer[11];  // Assuming 11 frames
 Texture2D spriteSheetWater;
 Rectangle frameRecWater[4]; 
 int waterFrame = 0;
+int popperSoundNr = 0;
 
 Texture2D spriteSheetRipple;
 Rectangle frameRecRipple[4]; 
 // Array of enemies
 Sprite* ripples = NULL;  // Declare a pointer to Enemy
+Sprite* bullits = NULL;
 
 Sound splashSfxL;
 Sound splashSfxR;
+Sound popperSfx[3];
+Sound explodingTubeSfx;
+Sound reloadSfx;
 
 // Array of enemies
 Sprite* enemies = NULL;  // Declare a pointer to Sprite
@@ -106,12 +111,21 @@ InitAudioDevice();
     // soundfx    
     splashSfxL = LoadSound("resources/splashLow.wav");
     splashSfxR = LoadSound("resources/splashHigh.wav");
-    
-    //PlaySound(splashSfx);
+    popperSfx[1] = LoadSound("resources/popper1.wav");
+    popperSfx[2] = LoadSound("resources/popper2.wav");
+    popperSfx[3] = LoadSound("resources/popper3.wav");
+    explodingTubeSfx = LoadSound("resources/explodingtube.wav");
+    //reloadSfx = LoadSound("resources/reload.wav");
+
     
     // Initialize enemies array
     enemies = (Sprite*)malloc(50 * sizeof(Sprite));  // Assuming initial size is 50
     ripples = (Sprite*)malloc(50 * sizeof(Sprite));
+    bullits = (Sprite*)malloc(50 * sizeof(Sprite));
+    
+    for (int i = 0; i < 49; i++) {
+        bullits[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
+    }
     
     //enemies[1] = (Sprite){2, 30, 40, 60.0f, 0, ALIVE};
     //enemies[2] = (Sprite){3, 50, 60, 90.0f, 0, ALIVE};
@@ -180,10 +194,16 @@ InitAudioDevice();
     UnloadTexture(spriteSheetPlayer);
     UnloadTexture(spriteSheetWater);
     
-        UnloadSound(splashSfxR);
-        UnloadSound(splashSfxL);
-        
-        free(ripples);
+    UnloadSound(splashSfxR);
+    UnloadSound(splashSfxL);
+    UnloadSound(popperSfx[1]);
+    UnloadSound(popperSfx[2]);
+    UnloadSound(popperSfx[3]);
+    UnloadSound(explodingTubeSfx);
+  
+    
+    free(ripples);
+    free(bullits);
     
     CloseAudioDevice();   
 

@@ -4,9 +4,11 @@
 #define SPRITES_H
 
 #include "raylib.h"
+
 #include <stddef.h>
 
 extern Texture2D spriteSheetPlayer;
+extern Sound popperSfx[];
 
 // Sprite Definition
 typedef struct {
@@ -27,7 +29,8 @@ void DrawPlayerSprite(Sprite *sprite);
 void UpdatePlayerSprite(Sprite *sprite);
 void DrawRipples(Sprite ripples[], size_t size);
 void NewRipple(Sprite ripples[], size_t size, int x, int y);
+void DrawBullits(Sprite bullits[], size_t size);
+void NewBullit(Sprite bullits[], size_t size, int x, int y, int degrees);
 
 
-
-#endif // $PRITES_H
+#endif // SPRITES_H

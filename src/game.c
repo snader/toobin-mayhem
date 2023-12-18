@@ -11,8 +11,7 @@ void UpdateDrawFrame(void)
       if (frameCount>60) {
         frameCount = 1;
       }
-    
-    
+        
     
     // Screen scale logic (x2)
       if (IsKeyPressed(KEY_ONE)) screenScale = 1;
@@ -24,10 +23,7 @@ void UpdateDrawFrame(void)
         prevScreenScale = screenScale;
       }
 
-    // Update variables
-    if (frameCount % 30 == 0) {
-        waterFrame = GetRandomValue(0, 3);
-    }
+    
 
     // Handle key presses
     if (IsKeyPressed(KEY_SPACE)) {
@@ -36,11 +32,24 @@ void UpdateDrawFrame(void)
                 currentScreen = SCREEN_TITLE;
                 break;
             case SCREEN_TITLE:
+            
+                player.frame = 0;
+                player.speed = 0;
+                player.degrees = 0;
+                player.x = screenWidth / 2;
+                player.y = screenHeight / 2;
+                player.isAlive = ALIVE;
+            
                 currentScreen = SCREEN_GAMEPLAY;
                 break;
             case SCREEN_GAMEPLAY:
                 // Handle gameplay actions
+                    //currentScreen = SCREEN_GAMEOVER;
                 break;
+            case SCREEN_GAMEOVER:
+                // Handle gameover actions
+                currentScreen = SCREEN_TITLE;
+                break;    
             case SCREEN_ENDING:
                 break;
             default:
@@ -55,16 +64,20 @@ void UpdateDrawFrame(void)
 
         switch (currentScreen) {
             case SCREEN_LOGO:
-                UpdateLogoScreen();
+                DrawLogoScreen();
                 break;
             case SCREEN_TITLE:
-                UpdateTitleScreen();
+                DrawTitleScreen();
                 break;
             case SCREEN_GAMEPLAY:
                 UpdateGameplayScreen();
+                DrawGameplayScreen();
                 break;
+            case SCREEN_GAMEOVER:
+                UpdateGameoverScreen();
+                DrawGameoverScreen();
             case SCREEN_ENDING:
-                UpdateEndingScreen();
+                DrawEndingScreen();
                 break;
             default:
                 // Handle invalid screen or default case
@@ -92,16 +105,25 @@ void UpdateDrawFrame(void)
 // Functions ***
 // *************
 
+/**
+* UpdateGameplayScreen
+*/
 void UpdateGameplayScreen(void) {
-    // Update logic for the gameplay screen...
-    
-    
-    //if (IsKeyDown(KEY_RIGHT)) player.degrees += 1.0f;
-    //if (IsKeyDown(KEY_LEFT)) player.degrees -= 1.0f;
-         
+    // Update variables
+    if (frameCount % 30 == 0) {
+        waterFrame = GetRandomValue(0, 3);
+    }     
 
-    UpdatePlayerSprite(&player);
-     
+    UpdatePlayerSprite(&player);   
+    
+    
+}
+
+/**
+* DrawGameplayScreen
+*/
+void DrawGameplayScreen(void) {
+    // Update logic for the gameplay screen...
     
     
     // Draw water
@@ -112,31 +134,82 @@ void UpdateGameplayScreen(void) {
     }
     
     //DrawText(TextFormat("Rotation: %f", player.degrees), 100, 100, 20, WHITE);
-    //DrawText(TextFormat("Speed: %f", player.speed), 100, 130, 20, WHITE);
+    //DrawText(TextFormat("bullits: %d", sizeof(bullits)), 100, 130, 20, WHITE);
        
     // Draw Sprites
     //DrawEnemies(enemies, sizeof(enemies));
     
     DrawPlayerSprite(&player);
     
-    //DrawText(TextFormat("ripples: %f", sizeof(ripples) / sizeof(ripples[0])), 100, 130, 20, WHITE);
-    
+    DrawBullits(bullits, sizeof(bullits));
+        
     DrawText("Game", 10, 10, 20, GREEN);
         
 }
 
 
+/**
+* UpdateGameoverScreen
+*/
+void UpdateGameoverScreen(void) {
+    // Update variables
+    if (frameCount % 30 == 0) {
+        waterFrame = GetRandomValue(0, 3);
+    }     
+
+
+    if (player.frame<11) {
+        player.frame = 11;
+        PlaySound(explodingTubeSfx);
+         
+    } else {
+        if (frameCount % 10 == 0) {
+            player.frame++;
+            if (player.frame==13) {
+                PlaySound(splashSfxR);  
+            }
+            if (player.frame>16) {
+                player.isAlive = DEAD;
+                
+            }
+        }     
+    }
+    //UpdatePlayerSprite(&player);   
+}
+
+/**
+* DrawGameoverScreen
+*/
+void DrawGameoverScreen(void) {
+    
+
+    // Draw water
+    for (int y = 0; y < 256; y=y+16) {
+        for (int x = 0; x < 256; x=x+16) {
+            DrawTextureRec(spriteSheetWater, frameRecWater[waterFrame], (Vector2) { x, y }, WHITE);
+        }
+    }
+    
+    if (player.isAlive) {
+        DrawPlayerSprite(&player);
+    }
+    
+    
+    DrawText("Game Over", 10, 10, 20, WHITE);
+}
+
+
 // Define update functions for each screen
-void UpdateLogoScreen(void) {
+void DrawLogoScreen(void) {
     // Update logic for the logo screen...
     DrawText("Logo", 10, 10, 20, RED);
 }
 
-void UpdateTitleScreen(void) {
+void DrawTitleScreen(void) {
     // Update logic for the title screen...
     DrawText("Title", 10, 10, 20, RED);
 }
 
-void UpdateEndingScreen(void) {
+void DrawEndingScreen(void) {
     // Update logic for the ending screen...
 }
