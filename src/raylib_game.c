@@ -58,10 +58,16 @@ int myCount=0;
 RenderTexture2D target = { 0 };  // Initialized at init
 
 // NOTE! replace SCREEN_GAMEPLAY before release
-GameScreen currentScreen = SCREEN_GAMEPLAY; // SCREEN_LOGO;
+GameScreen currentScreen = SCREEN_LOGO; // SCREEN_LOGO;
 
+// isAlive
 int DEAD = 0;
 int ALIVE = 1;
+
+// state
+int DEFAULT = 1;
+int SHOOTING = 2;
+int EXPLODING = 3;
 
 // Player sprite
 Texture2D spriteSheetPlayer;
@@ -73,9 +79,19 @@ Rectangle frameRecPlayer[11];  // Assuming 11 frames
 // Water tiles
 Texture2D spriteSheetWater;
 Rectangle frameRecWater[4]; 
+
+// counter
+Texture2D spriteCounter;
+Rectangle frameRecCounter[5];
+
+// Rubber duckies
+Texture2D spriteSheetDuck;
+Rectangle frameRecDuck[4];
+
 int waterFrame = 0;
 int popperSoundNr = 0;
 
+// ripples
 Texture2D spriteSheetRipple;
 Rectangle frameRecRipple[4]; 
 // Array of enemies
@@ -89,7 +105,7 @@ Sound explodingTubeSfx;
 Sound reloadSfx;
 
 // Array of enemies
-Sprite* enemies = NULL;  // Declare a pointer to Sprite
+Sprite* duckies = NULL;  // Declare a pointer to Sprite
 Sprite player; 
 
 //----------------------------------------------------------------------------------
@@ -119,12 +135,16 @@ InitAudioDevice();
 
     
     // Initialize enemies array
-    enemies = (Sprite*)malloc(50 * sizeof(Sprite));  // Assuming initial size is 50
-    ripples = (Sprite*)malloc(50 * sizeof(Sprite));
+    duckies = (Sprite*)malloc(20 * sizeof(Sprite));  // Assuming initial size is 50
+    ripples = (Sprite*)malloc(10 * sizeof(Sprite));
     bullits = (Sprite*)malloc(50 * sizeof(Sprite));
     
     for (int i = 0; i < 49; i++) {
         bullits[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
+    }
+    
+    for (int i = 0; i < 20; i++) {
+        duckies[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
     }
     
     //enemies[1] = (Sprite){2, 30, 40, 60.0f, 0, ALIVE};
@@ -166,11 +186,25 @@ InitAudioDevice();
         frameRecRipple[i].width = 1;
         frameRecRipple[i].height = 1;
     }  
+    spriteSheetDuck = LoadTexture("resources/rubberduck-small.png"); 
+    for (int i = 0; i < 4; i++) {
+        frameRecDuck[i].x = i * 10;  // Adjust based on your sprite sheet layout
+        frameRecDuck[i].y = 0;
+        frameRecDuck[i].width = 10;
+        frameRecDuck[i].height = 10;
+    }  
+    spriteCounter = LoadTexture("resources/count.png"); 
+    for (int i = 0; i < 4; i++) {
+        frameRecCounter[i].x = i * 5;  // Adjust based on your sprite sheet layout
+        frameRecCounter[i].y = 0;
+        frameRecCounter[i].width = 5;
+        frameRecCounter[i].height = 5;
+    }  
     
     // Render texture to draw full screen, enables screen scaling
     // NOTE: If screen is scaled, mouse input should be scaled proportionally
     target = LoadRenderTexture(screenWidth, screenHeight);
-    SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR); // 
+    SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR); //  TEXTURE_FILTER_BILINEAR
     
 
 #if defined(PLATFORM_WEB)
@@ -193,6 +227,8 @@ InitAudioDevice();
     // TODO: Unload all loaded resources at this point
     UnloadTexture(spriteSheetPlayer);
     UnloadTexture(spriteSheetWater);
+    UnloadTexture(spriteSheetRipple);
+    UnloadTexture(spriteSheetDuck);
     
     UnloadSound(splashSfxR);
     UnloadSound(splashSfxL);
@@ -204,7 +240,8 @@ InitAudioDevice();
     
     free(ripples);
     free(bullits);
-    
+    free(duckies);
+       
     CloseAudioDevice();   
 
     CloseWindow();        // Close window and OpenGL context

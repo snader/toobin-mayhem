@@ -28,6 +28,7 @@ extern Texture2D spriteSheetPlayer;
 extern Rectangle frameRecPlayer[11];
 extern Sprite* ripples;
 extern Sprite* bullits;
+extern Sprite* duckies;
 extern Sprite player;
 
 extern Sound splashSfxL;

@@ -2,6 +2,8 @@
 #include "sprites.h"
 #include "game.h"
 
+
+
 // Update and draw frame
 void UpdateDrawFrame(void)
 {
@@ -57,10 +59,16 @@ void UpdateDrawFrame(void)
                 break;
         }
     }
+    
+    if (IsKeyPressed(KEY_Q)) {
+        currentScreen = SCREEN_GAMEOVER;
+    }
 
     // Render to texture
     BeginTextureMode(target);
-        ClearBackground(RAYWHITE);
+    
+    Color backgroundColor = {73, 153, 203, 255}; // #4999cb in RGB
+        ClearBackground(backgroundColor);
 
         switch (currentScreen) {
             case SCREEN_LOGO:
@@ -88,7 +96,9 @@ void UpdateDrawFrame(void)
 
     // Draw scaled texture
     BeginDrawing();
-        ClearBackground(RAYWHITE);
+    
+        
+        ClearBackground(backgroundColor);
 
         DrawTexturePro(target.texture, (Rectangle){ 0, 0, (float)target.texture.width, -(float)target.texture.height }, (Rectangle){ 0, 0, (float)target.texture.width*screenScale, (float)target.texture.height*screenScale }, (Vector2){ 0, 0 }, 0.0f, WHITE);
 
@@ -112,9 +122,16 @@ void UpdateGameplayScreen(void) {
     // Update variables
     if (frameCount % 30 == 0) {
         waterFrame = GetRandomValue(0, 3);
+        
+        if (GetRandomValue(1,10)>5) {
+            NewDuck(duckies);
+        }
     }     
+    
+    
 
-    UpdatePlayerSprite(&player);   
+    UpdatePlayerSprite(&player);  
+    UpdateDucks(duckies, player, bullits);
     
     
 }
@@ -138,6 +155,10 @@ void DrawGameplayScreen(void) {
        
     // Draw Sprites
     //DrawEnemies(enemies, sizeof(enemies));
+    
+
+    
+    DrawDucks(duckies);
     
     DrawPlayerSprite(&player);
     

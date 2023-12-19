@@ -21,6 +21,9 @@ typedef struct {
     int frameDelay;
     int isAlive;
     int drawFrame;
+    int state;
+    int secondsAlive;
+    int counter;
 } Sprite;
 
 // Function declaration
@@ -31,6 +34,8 @@ void DrawRipples(Sprite ripples[], size_t size);
 void NewRipple(Sprite ripples[], size_t size, int x, int y);
 void DrawBullits(Sprite bullits[], size_t size);
 void NewBullit(Sprite bullits[], size_t size, int x, int y, int degrees);
+void DrawDucks(Sprite duckies[]);
+void NewDuck(Sprite duckies[]);
 
 
 #endif // SPRITES_H
