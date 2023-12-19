@@ -101,6 +101,7 @@ Sprite* bullits = NULL;
 Sound splashSfxL;
 Sound splashSfxR;
 Sound popperSfx[3];
+Sound quackSfx[3];
 Sound explodingTubeSfx;
 Sound reloadSfx;
 
@@ -130,6 +131,10 @@ InitAudioDevice();
     popperSfx[1] = LoadSound("resources/popper1.wav");
     popperSfx[2] = LoadSound("resources/popper2.wav");
     popperSfx[3] = LoadSound("resources/popper3.wav");
+    quackSfx[1] = LoadSound("resources/quack1.wav");
+    quackSfx[2] = LoadSound("resources/quack2.wav");
+    quackSfx[3] = LoadSound("resources/quack3.wav");
+    
     explodingTubeSfx = LoadSound("resources/explodingtube.wav");
     //reloadSfx = LoadSound("resources/reload.wav");
 

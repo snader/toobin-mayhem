@@ -13,6 +13,7 @@ extern int frameHeightPlayer;
 extern float frameCountPlayer;
 extern Sound splashSfxL;
 extern Sound splashSfxR;
+extern Sound quackSfx[3];
 extern Rectangle frameRecPlayer[];
 extern int DEAD;
 extern int ALIVE;
@@ -431,6 +432,10 @@ void UpdateDucks(Sprite duckies[], Sprite player, Sprite bullits[]) {
                     }
                 }
                 
+                if (GetRandomValue(0,50)>48) {
+                    PlaySound(quackSfx[GetRandomValue(1,3)]);
+                }
+                
             //}
             //if (frameCount % 30 == 0) {
             
@@ -465,7 +470,7 @@ void UpdateDucks(Sprite duckies[], Sprite player, Sprite bullits[]) {
             for (int b = 0; b < 50; b++) {
                 
                 if (bullits[b].isAlive == ALIVE) {
-                    if (CheckCollisionPointCircle((Vector2){bullits[b].x, bullits[b].y}, (Vector2){duckies[i].x + 4, duckies[i].y + 4}, 7)) {
+                    if (CheckCollisionPointCircle((Vector2){bullits[b].x, bullits[b].y}, (Vector2){duckies[i].x, duckies[i].y}, 4)) {
                         duckies[i].isAlive = DEAD;
                         bullits[b].isAlive = DEAD;
                     }   
