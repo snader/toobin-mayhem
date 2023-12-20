@@ -24,6 +24,7 @@ typedef struct {
     int state;
     int secondsAlive;
     int counter;
+    float energy;
 } Sprite;
 
 // Function declaration
@@ -36,6 +37,7 @@ void DrawBullits(Sprite bullits[], size_t size);
 void NewBullit(Sprite bullits[], size_t size, int x, int y, int degrees);
 void DrawDucks(Sprite duckies[]);
 void NewDuck(Sprite duckies[]);
+void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]);
 
 
 #endif // SPRITES_H

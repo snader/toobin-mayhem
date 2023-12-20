@@ -1,6 +1,9 @@
 #include "raylib.h"
 #include "sprites.h"
+#include "particle_system.h"
 #include "game.h"
+#include <math.h>
+
 
 
 
@@ -41,6 +44,7 @@ void UpdateDrawFrame(void)
                 player.x = screenWidth / 2;
                 player.y = screenHeight / 2;
                 player.isAlive = ALIVE;
+                player.energy = 100.0f;
             
                 currentScreen = SCREEN_GAMEPLAY;
                 break;
@@ -60,15 +64,13 @@ void UpdateDrawFrame(void)
         }
     }
     
-    if (IsKeyPressed(KEY_Q)) {
-        currentScreen = SCREEN_GAMEOVER;
-    }
+    
 
     // Render to texture
     BeginTextureMode(target);
     
-    Color backgroundColor = {73, 153, 203, 255}; // #4999cb in RGB
-        ClearBackground(backgroundColor);
+    //Color backgroundColor = {73, 153, 203, 255}; // #4999cb in RGB
+        ClearBackground(WHITE);
 
         switch (currentScreen) {
             case SCREEN_LOGO:
@@ -78,6 +80,11 @@ void UpdateDrawFrame(void)
                 DrawTitleScreen();
                 break;
             case SCREEN_GAMEPLAY:
+                if (IsKeyPressed(KEY_Q) || player.energy <= 0) {
+                    currentScreen = SCREEN_GAMEOVER;
+                    player.energy = -10; // in case of Q
+                }
+            
                 UpdateGameplayScreen();
                 DrawGameplayScreen();
                 break;
@@ -98,7 +105,7 @@ void UpdateDrawFrame(void)
     BeginDrawing();
     
         
-        ClearBackground(backgroundColor);
+        ClearBackground(WHITE);
 
         DrawTexturePro(target.texture, (Rectangle){ 0, 0, (float)target.texture.width, -(float)target.texture.height }, (Rectangle){ 0, 0, (float)target.texture.width*screenScale, (float)target.texture.height*screenScale }, (Vector2){ 0, 0 }, 0.0f, WHITE);
 
@@ -127,13 +134,11 @@ void UpdateGameplayScreen(void) {
             NewDuck(duckies);
         }
     }     
-    
-    
 
     UpdatePlayerSprite(&player);  
-    UpdateDucks(duckies, player, bullits);
-    
-    
+    UpdateDucks(duckies, &player, bullits);
+    UpdateExplosions();
+        
 }
 
 /**
@@ -163,8 +168,10 @@ void DrawGameplayScreen(void) {
     DrawPlayerSprite(&player);
     
     DrawBullits(bullits, sizeof(bullits));
+    
+    DrawExplosions();
         
-    DrawText("Game", 10, 10, 20, GREEN);
+    DrawEnergyBar(player);
         
 }
 
@@ -196,6 +203,7 @@ void UpdateGameoverScreen(void) {
         }     
     }
     //UpdatePlayerSprite(&player);   
+    UpdateDucks(duckies, &player, bullits);
 }
 
 /**
@@ -215,6 +223,8 @@ void DrawGameoverScreen(void) {
         DrawPlayerSprite(&player);
     }
     
+    DrawDucks(duckies);
+    
     
     DrawText("Game Over", 10, 10, 20, WHITE);
 }
@@ -228,7 +238,13 @@ void DrawLogoScreen(void) {
 
 void DrawTitleScreen(void) {
     // Update logic for the title screen...
-    DrawText("Title", 10, 10, 20, RED);
+    Rectangle sourceRec = { 0, 0, titleTexture.width, titleTexture.height };
+        Rectangle destRec = { 0, 0, (float)screenWidth, (float)screenHeight };
+        Vector2 origin = { 0, 0 }; // No rotation, use top-left corner as origin
+
+        DrawTexturePro(titleTexture, sourceRec, destRec, origin, 0.0f, WHITE);
+
+
 }
 
 void DrawEndingScreen(void) {

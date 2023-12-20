@@ -1,6 +1,7 @@
 // sprites.c
 
 #include "sprites.h"
+#include "particle_system.h"
 #include <math.h>
 
 // Include necessary declarations from main.c
@@ -13,7 +14,9 @@ extern int frameHeightPlayer;
 extern float frameCountPlayer;
 extern Sound splashSfxL;
 extern Sound splashSfxR;
-extern Sound quackSfx[3];
+extern Sound quackSfx[4];
+extern Sound ouchSfx[3];
+extern Sound popSfx;
 extern Rectangle frameRecPlayer[];
 extern int DEAD;
 extern int ALIVE;
@@ -26,6 +29,9 @@ extern Sprite* duckies;
 extern int frameCount;
 extern int myCount;
 extern int popperSoundNr; 
+extern int screenWidth;
+extern int screenHeight;
+
 
 
 /*
@@ -105,8 +111,11 @@ void DrawPlayerSprite(Sprite *sprite) {
         WHITE
     );
     
-    //DrawCircleV((Vector2){sprite->x , sprite->y} , 2, WHITE);
+    //DrawCircleLines(sprite->x , sprite->y , 10, WHITE);
+    //DrawCircleLines(sprite->x , sprite->y , 20, WHITE);
     
+    //DrawCircleV((Vector2){sprite->x , sprite->y} , 2, WHITE);
+    /*
         // above player, tonen als y>0 en/of x>0
         Vector2 circlePos;
         circlePos.x = sprite->x + sin(sprite->degrees * DEG2RAD) * 16;
@@ -123,13 +132,15 @@ void DrawPlayerSprite(Sprite *sprite) {
         circlePos.x = sprite->x - cos(sprite->degrees * DEG2RAD) * 12;
         circlePos.y = sprite->y - sin(sprite->degrees * DEG2RAD) * 11;       
         //DrawCircleV(circlePos, 2, WHITE);
-        
+    */    
         // below player, tonen als y<0 en/of x<0
         
         //circlePos.x = sprite->x - sin(sprite->degrees * DEG2RAD) * 16;
         //circlePos.y = sprite->y + cos(sprite->degrees * DEG2RAD) * 16;
         // Draw the rotating circle below the sprite
         //DrawCircleV(circlePos, 2, WHITE);
+        
+        DrawText(TextFormat("energy: %f", sprite->energy), 10, 160, 20, WHITE);
 }
 
 /**
@@ -137,6 +148,7 @@ void DrawPlayerSprite(Sprite *sprite) {
 */
 void UpdatePlayerSprite(Sprite *sprite) {
     
+        
     sprite->frameDelay++;
     
     if ((IsKeyDown(KEY_UP) || IsKeyDown(KEY_DOWN)) && !IsKeyDown(KEY_LEFT_CONTROL)) {
@@ -145,6 +157,7 @@ void UpdatePlayerSprite(Sprite *sprite) {
         if (sprite->frameDelay>10) {
             if (IsKeyDown(KEY_UP)) {
                 sprite->frame--;
+                
             } else if (IsKeyDown(KEY_DOWN)) {
                 sprite->frame++;
             }
@@ -154,7 +167,8 @@ void UpdatePlayerSprite(Sprite *sprite) {
             if (IsKeyDown(KEY_UP) || IsKeyDown(KEY_DOWN)) {
                 
                 if (sprite->frame == 1) {                
-                    PlaySound(splashSfxL);                                  
+                    PlaySound(splashSfxL);      
+                    sprite->energy -= 0.3f;
                 } 
                 
             }
@@ -191,6 +205,11 @@ void UpdatePlayerSprite(Sprite *sprite) {
     if (!IsKeyDown(KEY_LEFT_CONTROL) && !IsKeyDown(KEY_DOWN) && !IsKeyDown(KEY_UP) && !IsKeyDown(KEY_LEFT) && !IsKeyDown(KEY_RIGHT) 
         && sprite->frame!=7 && sprite->frame!=8) {
         sprite->frame = 0;
+        if (sprite->frameDelay>10) {
+            sprite->energy += 0.015f;
+            if (sprite->energy>100) { sprite->energy = 100.0f;}
+        }
+        
     }
     
     if (sprite->degrees > 360) {
@@ -217,8 +236,8 @@ void UpdatePlayerSprite(Sprite *sprite) {
     sprite->y += sprite->speed * -cos(sprite->degrees * DEG2RAD);
         
     // Clamp the sprite within the screen bounds
-    sprite->x = fmin(fmax(sprite->x, 0), GetScreenWidth() - 1);
-    sprite->y = fmin(fmax(sprite->y, 0), GetScreenHeight() - 1); 
+    sprite->x = fmin(fmax(sprite->x, 0), screenWidth - 1);
+    sprite->y = fmin(fmax(sprite->y, 0), screenHeight - 1); 
     
     // shooting - bullits
     if (sprite->frame == 8 && sprite->frameDelay>30) {        
@@ -413,7 +432,7 @@ void DrawDucks(Sprite duckies[]) {
     }
 }
 
-void UpdateDucks(Sprite duckies[], Sprite player, Sprite bullits[]) {
+void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
     for (int i = 0; i < 20; i++) {
         
         if (duckies[i].x > 266 || duckies[i].x < -10 || duckies[i].y < -10 || duckies[i].y >266) {
@@ -422,61 +441,88 @@ void UpdateDucks(Sprite duckies[], Sprite player, Sprite bullits[]) {
         
         if (duckies[i].isAlive == ALIVE) {
             
-            if (frameCount % 60 == 0) {
-                duckies[i].secondsAlive++;      
-                
-                if (duckies[i].state == EXPLODING) {
-                    duckies[i].counter--;
-                    if (duckies[i].counter<0) {
-                       duckies[i].isAlive = DEAD;
+            if (player->energy<=0) {
+                duckies[i].state = DEFAULT;
+            } else {
+                        
+                if (frameCount % 60 == 0) {
+                    duckies[i].secondsAlive++;      
+                    
+                    if (duckies[i].state == EXPLODING) {
+                        duckies[i].counter--;
+                        if (duckies[i].counter<0) {
+                            duckies[i].isAlive = DEAD;
+                            Vector2 explosionPosition = {duckies[i].x, duckies[i].y};
+                            PlaySound(popSfx);
+                            InitializeExplosion(explosionPosition);                        
+                            Vector2 playerPosition = {player->x, player->y};  // Replace with actual player position
+
+                            int distance = calculateDistance(explosionPosition, playerPosition);
+                            if (distance < 25) {
+                                player->energy = player->energy - ((30-distance)*0.5f);
+                                if (distance<10) {
+                                    PlaySound(ouchSfx[2]);
+                                } else {
+                                    PlaySound(ouchSfx[1]);
+                                }
+                                
+                            }
+                        }
                     }
+                    
+                                    
                 }
-                
-                if (GetRandomValue(0,50)>48) {
-                    PlaySound(quackSfx[GetRandomValue(1,3)]);
-                }
-                
-            //}
-            //if (frameCount % 30 == 0) {
             
-                
             }
             
-            // Check for collision between player and duck (you need to implement this)
-                if (CheckCollisionCircles((Vector2){duckies[i].x, duckies[i].y}, 3, (Vector2){player.x, player.y}, 20)) {
+            // Check for collision between player and duck 
+            if (player->energy>0) { 
+            
+                if (CheckCollisionCircles((Vector2){duckies[i].x, duckies[i].y}, 3, (Vector2){player->x, player->y}, 20)) {
                                        
-                    duckies[i].degrees = player.degrees + GetRandomValue(-15,15);
+                    duckies[i].degrees = player->degrees + GetRandomValue(-15,15);
                     
-                    duckies[i].speed = player.speed - (player.speed/5);
-                    if (duckies[i].speed<0.6) { duckies[i].speed=0.6; }
-                    duckies[i].x += (player.speed*2) * sin(duckies[i].degrees * DEG2RAD);
-                    duckies[i].y += (player.speed*2) * -cos(duckies[i].degrees * DEG2RAD);  
+                    if (duckies[i].state != EXPLODING) {
+                        duckies[i].speed = player->speed - (player->speed/5);
+                        if (duckies[i].speed<0.6) { duckies[i].speed=0.6; }
+                        duckies[i].x += (player->speed*2) * sin(duckies[i].degrees * DEG2RAD);
+                        duckies[i].y += (player->speed*2) * -cos(duckies[i].degrees * DEG2RAD);  
+                    }
                     
-                    if (duckies[i].state == DEFAULT) {
-                        duckies[i].counter = 4;
-                        duckies[i].state = EXPLODING;                        
+                    if (GetRandomValue(1,100)>95) {
+                        PlaySound(quackSfx[GetRandomValue(1,3)]);
                     }
                     
                 }
                 
-                // lifespan
-                if (duckies[i].state == DEFAULT && duckies[i].secondsAlive > GetRandomValue(20,40)) {
+                // lifespan and suicidal ducks.. based on the lifespan and level
+                if (duckies[i].state == DEFAULT && duckies[i].secondsAlive > GetRandomValue(10,20)) {
                     duckies[i].counter = 4;
-                    duckies[i].state = EXPLODING; 
+                    duckies[i].state = EXPLODING;      
+                    duckies[i].speed = GetRandomValue(2,10) / 10.0f;    
+                   
+                }
+                
+                // make duckies follow
+                if (duckies[i].state == EXPLODING && GetRandomValue(1,10)>8) {
+                    duckies[i].degrees = GetRandomValue(-10,+10) + 90.0f + atan2(player->y - duckies[i].y, player->x - duckies[i].x) * RAD2DEG;
+                    
                 }
             
             
             
-            for (int b = 0; b < 50; b++) {
-                
-                if (bullits[b].isAlive == ALIVE) {
-                    if (CheckCollisionPointCircle((Vector2){bullits[b].x, bullits[b].y}, (Vector2){duckies[i].x, duckies[i].y}, 4)) {
-                        duckies[i].isAlive = DEAD;
-                        bullits[b].isAlive = DEAD;
-                    }   
+                for (int b = 0; b < 50; b++) {
+                    
+                    if (bullits[b].isAlive == ALIVE) {
+                        if (CheckCollisionPointCircle((Vector2){bullits[b].x, bullits[b].y}, (Vector2){duckies[i].x, duckies[i].y}, 4)) {
+                            duckies[i].isAlive = DEAD;
+                            bullits[b].isAlive = DEAD;
+                            PlaySound(quackSfx[GetRandomValue(1,3)]);
+                        }   
+                    }
+                    
+                    
                 }
-                
-                
             }
             
             // move the duckies

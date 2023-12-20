@@ -26,6 +26,7 @@ extern Texture2D spriteSheetWater;
 extern Rectangle frameRecWater[4];
 extern Texture2D spriteSheetPlayer;
 extern Rectangle frameRecPlayer[11];
+extern Texture2D titleTexture;
 extern Sprite* ripples;
 extern Sprite* bullits;
 extern Sprite* duckies;
@@ -51,5 +52,6 @@ extern void DrawGameoverScreen(void);
 extern void DrawLogoScreen(void);
 extern void DrawTitleScreen(void);
 extern void DrawEndingScreen(void);
+extern void DrawEnergyBar(Sprite player);
 
 #endif // _GAME_H

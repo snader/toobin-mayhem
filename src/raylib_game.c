@@ -24,7 +24,7 @@
 #include <stdlib.h>                         // Required for: 
 #include <string.h>                         // Required for: 
 #include <stddef.h>
-
+#include <math.h>
 
 //----------------------------------------------------------------------------------
 // Defines and Macros
@@ -37,6 +37,7 @@
 #else
     #define LOG(...)
 #endif
+
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
@@ -88,6 +89,8 @@ Rectangle frameRecCounter[5];
 Texture2D spriteSheetDuck;
 Rectangle frameRecDuck[4];
 
+Texture2D titleTexture; 
+
 int waterFrame = 0;
 int popperSoundNr = 0;
 
@@ -100,10 +103,12 @@ Sprite* bullits = NULL;
 
 Sound splashSfxL;
 Sound splashSfxR;
-Sound popperSfx[3];
-Sound quackSfx[3];
+Sound popperSfx[4];
+Sound quackSfx[4];
+Sound ouchSfx[3];
 Sound explodingTubeSfx;
-Sound reloadSfx;
+Sound popSfx;
+
 
 // Array of enemies
 Sprite* duckies = NULL;  // Declare a pointer to Sprite
@@ -112,7 +117,26 @@ Sprite player;
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
 //----------------------------------------------------------------------------------
+void DrawEnergyBar(Sprite player) {
+    // Calculate bar dimensions based on energy level
+    float barWidth = (80.0) * player.energy / 100.0;
 
+    // Draw the bar
+    if (player.energy>50) {
+        DrawRectangle(10, 10, barWidth, 10, GREEN);
+    } else if (player.energy>20) {
+        DrawRectangle(10, 10, barWidth, 10, ORANGE);
+    } else {
+        DrawRectangle(10, 10, barWidth, 10, RED);
+    }   
+        
+    // Draw white border
+    DrawRectangleLinesEx((Rectangle){10, 10, 80, 10}, 1, WHITE);
+}
+
+int calculateDistance(Vector2 point1, Vector2 point2) {
+    return sqrt(pow(point2.x - point1.x, 2) + pow(point2.y - point1.y, 2));
+}
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -125,6 +149,9 @@ int main(void)
 
 InitAudioDevice();
 
+    
+    
+
     // soundfx    
     splashSfxL = LoadSound("resources/splashLow.wav");
     splashSfxR = LoadSound("resources/splashHigh.wav");
@@ -134,6 +161,9 @@ InitAudioDevice();
     quackSfx[1] = LoadSound("resources/quack1.wav");
     quackSfx[2] = LoadSound("resources/quack2.wav");
     quackSfx[3] = LoadSound("resources/quack3.wav");
+    ouchSfx[1] = LoadSound("resources/ouch1.wav");
+    ouchSfx[2] = LoadSound("resources/ouch2.wav");
+    popSfx = LoadSound("resources/pop.wav");
     
     explodingTubeSfx = LoadSound("resources/explodingtube.wav");
     //reloadSfx = LoadSound("resources/reload.wav");
@@ -169,6 +199,8 @@ InitAudioDevice();
     InitWindow(screenWidth, screenHeight, "Toobin' Mayhem");
     
     // Load resources / Initialize variables at this point
+    
+    titleTexture = LoadTexture("resources/title.png");
     
     spriteSheetPlayer = LoadTexture("resources/player2.png"); 
     for (int i = 0; i < frameCountPlayer; i++) {
@@ -240,8 +272,13 @@ InitAudioDevice();
     UnloadSound(popperSfx[1]);
     UnloadSound(popperSfx[2]);
     UnloadSound(popperSfx[3]);
+    UnloadSound(quackSfx[1]);
+    UnloadSound(quackSfx[2]);
+    UnloadSound(quackSfx[3]);
+    
     UnloadSound(explodingTubeSfx);
-  
+    UnloadSound(ouchSfx[1]);
+    UnloadSound(ouchSfx[2]);
     
     free(ripples);
     free(bullits);
