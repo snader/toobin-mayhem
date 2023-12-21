@@ -6,7 +6,7 @@
 #include <raylib.h>
 
 #define MAX_PARTICLES 40
-#define MAX_EXPLOSIONS 5
+#define MAX_EXPLOSIONS 10
 
 typedef struct {
     Vector2 position;

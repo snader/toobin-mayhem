@@ -9,6 +9,7 @@ extern Texture2D spriteSheetPlayer;
 extern Texture2D spriteSheetRipple;
 extern Texture2D spriteSheetDuck;
 extern Texture2D spriteCounter;
+extern Texture2D explosionTexture;
 extern int frameWidthPlayer;
 extern int frameHeightPlayer;
 extern float frameCountPlayer;
@@ -23,6 +24,7 @@ extern int ALIVE;
 extern int DEFAULT;
 extern int SHOOTING;
 extern int EXPLODING;
+extern int duckHit;
 extern Sprite* ripples;
 extern Sprite* bullits;
 extern Sprite* duckies;
@@ -140,7 +142,7 @@ void DrawPlayerSprite(Sprite *sprite) {
         // Draw the rotating circle below the sprite
         //DrawCircleV(circlePos, 2, WHITE);
         
-        DrawText(TextFormat("energy: %f", sprite->energy), 10, 160, 20, WHITE);
+        //DrawText(TextFormat("energy: %f", sprite->energy), 10, 160, 20, WHITE);
 }
 
 /**
@@ -168,7 +170,7 @@ void UpdatePlayerSprite(Sprite *sprite) {
                 
                 if (sprite->frame == 1) {                
                     PlaySound(splashSfxL);      
-                    sprite->energy -= 0.3f;
+                    sprite->energy -= 0.1f;
                 } 
                 
             }
@@ -206,8 +208,8 @@ void UpdatePlayerSprite(Sprite *sprite) {
         && sprite->frame!=7 && sprite->frame!=8) {
         sprite->frame = 0;
         if (sprite->frameDelay>10) {
-            sprite->energy += 0.015f;
-            if (sprite->energy>100) { sprite->energy = 100.0f;}
+            //sprite->energy += 0.015f;
+            //if (sprite->energy>100) { sprite->energy = 100.0f;}
         }
         
     }
@@ -416,6 +418,13 @@ void DrawDucks(Sprite duckies[]) {
                     0,
                     WHITE
                 ); 
+                
+                if (duckies[i].counter == 0 && frameCount>55) {
+                    Rectangle sourceRec = { 0, 0, explosionTexture.width, explosionTexture.height };
+                    Rectangle destRec = { duckies[i].x - 5, duckies[i].y - 5, (float)explosionTexture.width, (float)explosionTexture.height };
+                    Vector2 origin = { 0, 0 }; // No rotation, use top-left corner as origin
+                    DrawTexturePro(explosionTexture, sourceRec, destRec, origin, 0.0f, WHITE);
+                }
             }
             
           // DrawCircleLines(duckies[i].x , duckies[i].y , 5, WHITE);
@@ -433,13 +442,16 @@ void DrawDucks(Sprite duckies[]) {
 }
 
 void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
-    for (int i = 0; i < 20; i++) {
-        
-        if (duckies[i].x > 266 || duckies[i].x < -10 || duckies[i].y < -10 || duckies[i].y >266) {
-            duckies[i].isAlive = DEAD;
-        }
-        
+    for (int i = 0; i < 100; i++) {
+                
         if (duckies[i].isAlive == ALIVE) {
+            
+            if (duckies[i].x > 260 || duckies[i].x < -4 || duckies[i].y < -4 || duckies[i].y > 260) { 
+                duckies[i].degrees += 180.0f;
+                if (duckies[i].degrees >= 360.0f) {
+                   duckies[i].degrees -= 360.0f;
+                }
+            }              
             
             if (player->energy<=0) {
                 duckies[i].state = DEFAULT;
@@ -452,14 +464,22 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
                         duckies[i].counter--;
                         if (duckies[i].counter<0) {
                             duckies[i].isAlive = DEAD;
-                            Vector2 explosionPosition = {duckies[i].x, duckies[i].y};
+                            
+                            // not counting for amount shot
+                            ducksAdded--;
+                            score--;
+                            if (score<0) {
+                                score = 0;
+                            }
+                                                                                    
                             PlaySound(popSfx);
+                            Vector2 explosionPosition = {duckies[i].x, duckies[i].y};  
                             InitializeExplosion(explosionPosition);                        
                             Vector2 playerPosition = {player->x, player->y};  // Replace with actual player position
 
                             int distance = calculateDistance(explosionPosition, playerPosition);
                             if (distance < 25) {
-                                player->energy = player->energy - ((30-distance)*0.5f);
+                                player->energy = player->energy - ((duckHit-distance)*0.5f);
                                 if (distance<10) {
                                     PlaySound(ouchSfx[2]);
                                 } else {
@@ -478,7 +498,7 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
             // Check for collision between player and duck 
             if (player->energy>0) { 
             
-                if (CheckCollisionCircles((Vector2){duckies[i].x, duckies[i].y}, 3, (Vector2){player->x, player->y}, 20)) {
+                if (CheckCollisionCircles((Vector2){duckies[i].x, duckies[i].y}, 3, (Vector2){player->x, player->y}, 18)) {
                                        
                     duckies[i].degrees = player->degrees + GetRandomValue(-15,15);
                     
@@ -496,10 +516,11 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
                 }
                 
                 // lifespan and suicidal ducks.. based on the lifespan and level
-                if (duckies[i].state == DEFAULT && duckies[i].secondsAlive > GetRandomValue(10,20)) {
+                if (duckies[i].state == DEFAULT && duckies[i].secondsAlive > (GetRandomValue(100,200)/10)) {
                     duckies[i].counter = 4;
                     duckies[i].state = EXPLODING;      
                     duckies[i].speed = GetRandomValue(2,10) / 10.0f;    
+                    
                    
                 }
                 
@@ -517,6 +538,9 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
                         if (CheckCollisionPointCircle((Vector2){bullits[b].x, bullits[b].y}, (Vector2){duckies[i].x, duckies[i].y}, 4)) {
                             duckies[i].isAlive = DEAD;
                             bullits[b].isAlive = DEAD;
+                            score = score + 10;
+                            Vector2 explosionPosition = {bullits[b].x, bullits[b].y};  
+                            InitializeExplosion(explosionPosition);  
                             PlaySound(quackSfx[GetRandomValue(1,3)]);
                         }   
                     }
@@ -562,7 +586,7 @@ void NewDuck(Sprite duckies[]) {
     
     float randomFloat = (float)GetRandomValue(1, 3) / 10;
     
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 100; i++) {
         // reuse dead duck       
 
         if (duckies[i].isAlive == DEAD) {
@@ -571,16 +595,16 @@ void NewDuck(Sprite duckies[]) {
             duckies[i].speed = randomFloat;            
             
             if (tempr>5) {
-                tempx = -9;                
+                tempx = 0;                
                 tempy = GetRandomValue(20,236);   
                 duckies[i].degrees = GetRandomValue(10,170);                 
             } else if (tempr>0) {
-                tempx = 265;                
+                tempx = 256;                
                 tempy = GetRandomValue(20,236);  
                 duckies[i].degrees = GetRandomValue(190,350);                    
             } else if (tempr<-5) {
                 tempx = GetRandomValue(20,236);                  
-                tempy = -9;   
+                tempy = 0;   
                 duckies[i].degrees = GetRandomValue(100,270); 
             } else {   
                 if (GetRandomValue(1,10)>5) {
@@ -589,7 +613,7 @@ void NewDuck(Sprite duckies[]) {
                     duckies[i].degrees = GetRandomValue(5,85); 
                 }
                 tempx = GetRandomValue(20,236);
-                tempy = 265; 
+                tempy = 256; 
             }        
             
             duckies[i].isAlive = ALIVE;
@@ -599,9 +623,11 @@ void NewDuck(Sprite duckies[]) {
             duckies[i].state = DEFAULT;
             duckies[i].counter = 5;
             
+            ducksAdded++;
+            
            // 
             //PlaySound(popperSfx[popperSoundNr]);
-            //DrawText(TextFormat("duckie: %d", tempx), 10, 130, 20, WHITE);
+            
             break;
         }
         

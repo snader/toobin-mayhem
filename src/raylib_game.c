@@ -53,7 +53,6 @@ unsigned int screenScale = 3;
 unsigned int prevScreenScale = 1;
 
 int frameCount = 0;
-
 int myCount=0;
 
 RenderTexture2D target = { 0 };  // Initialized at init
@@ -69,6 +68,15 @@ int ALIVE = 1;
 int DEFAULT = 1;
 int SHOOTING = 2;
 int EXPLODING = 3;
+
+// damage
+int duckHit = 40;
+
+int level = 1;
+int levelDuckCount[20] = {5, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95};
+int ducksAdded = 0;
+
+int score = 0;
 
 // Player sprite
 Texture2D spriteSheetPlayer;
@@ -90,6 +98,7 @@ Texture2D spriteSheetDuck;
 Rectangle frameRecDuck[4];
 
 Texture2D titleTexture; 
+Texture2D explosionTexture;
 
 int waterFrame = 0;
 int popperSoundNr = 0;
@@ -109,6 +118,9 @@ Sound ouchSfx[3];
 Sound explodingTubeSfx;
 Sound popSfx;
 
+Font konamiFont;
+int tmpCount = 0;
+char levelText[50];
 
 // Array of enemies
 Sprite* duckies = NULL;  // Declare a pointer to Sprite
@@ -119,20 +131,51 @@ Sprite player;
 //----------------------------------------------------------------------------------
 void DrawEnergyBar(Sprite player) {
     // Calculate bar dimensions based on energy level
+    int x = 40;
+    int y = 5;
+    int width = 80;
+    int height = 9;
     float barWidth = (80.0) * player.energy / 100.0;
 
     // Draw the bar
     if (player.energy>50) {
-        DrawRectangle(10, 10, barWidth, 10, GREEN);
+        DrawRectangle(x, y, barWidth, height, GREEN);
     } else if (player.energy>20) {
-        DrawRectangle(10, 10, barWidth, 10, ORANGE);
+        DrawRectangle(x, y, barWidth, height, ORANGE);
     } else {
-        DrawRectangle(10, 10, barWidth, 10, RED);
+        DrawRectangle(x, y, barWidth, height, RED);
     }   
         
     // Draw white border
-    DrawRectangleLinesEx((Rectangle){10, 10, 80, 10}, 1, WHITE);
+    DrawRectangleLinesEx((Rectangle){x, y, width, height}, 1, WHITE);
+    
+    DrawStyledText("TUBE", (Vector2){5, y}, WHITE, BLACK, 0, 1);   
+    
+    sprintf(levelText, "SCORE %d", score);
+    DrawStyledText(levelText, (Vector2){130, y}, WHITE, BLACK, 0 ,1);  
 }
+
+
+
+void DrawStyledText(const char* text, Vector2 position, Color textColor, Color outlineColor, int outlineThickness, int bold) {
+    // Draw text with outline
+    if (outlineThickness>0) {
+        DrawTextEx(konamiFont, text, (Vector2){position.x + outlineThickness, position.y + outlineThickness}, konamiFont.baseSize, 2.0f, outlineColor);
+        DrawTextEx(konamiFont, text, (Vector2){position.x + outlineThickness + 1, position.y + outlineThickness}, konamiFont.baseSize, 2.0f, outlineColor);
+    }
+    // Draw text without outline    
+    DrawTextEx(konamiFont, text, position, konamiFont.baseSize, 2.0f, textColor);
+    if (bold) {
+        DrawTextEx(konamiFont, text, (Vector2){position.x + 1, position.y}, konamiFont.baseSize, 2.0f, textColor);
+    }
+}
+
+/*
+void DrawText() {
+    DrawTextEx(konamiFont, "- PRESS SPACE TO PLAY -", (Vector2){46,121}, konamiFont.baseSize, 2.0f, BLACK);
+    DrawTextEx(konamiFont, "- PRESS SPACE TO PLAY -", (Vector2){45,120}, konamiFont.baseSize, 2.0f, WHITE);
+}
+*/
 
 int calculateDistance(Vector2 point1, Vector2 point2) {
     return sqrt(pow(point2.x - point1.x, 2) + pow(point2.y - point1.y, 2));
@@ -170,7 +213,7 @@ InitAudioDevice();
 
     
     // Initialize enemies array
-    duckies = (Sprite*)malloc(20 * sizeof(Sprite));  // Assuming initial size is 50
+    duckies = (Sprite*)malloc(100 * sizeof(Sprite));  // Assuming initial size is 50
     ripples = (Sprite*)malloc(10 * sizeof(Sprite));
     bullits = (Sprite*)malloc(50 * sizeof(Sprite));
     
@@ -182,11 +225,8 @@ InitAudioDevice();
         duckies[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
     }
     
-    //enemies[1] = (Sprite){2, 30, 40, 60.0f, 0, ALIVE};
-    //enemies[2] = (Sprite){3, 50, 60, 90.0f, 0, ALIVE};
-    //enemies[3] = (Sprite){4, 70, 80, 120.0f, 0, ALIVE}; 
-    
-    player = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, ALIVE};
+   
+    player = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
  
     ripples[0] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
     ripples[1] = (Sprite){1, 130, 100, 0.0f, 0.0f, 0, 0, DEAD};
@@ -199,8 +239,10 @@ InitAudioDevice();
     InitWindow(screenWidth, screenHeight, "Toobin' Mayhem");
     
     // Load resources / Initialize variables at this point
+    konamiFont = LoadFont("resources/font.png");
     
     titleTexture = LoadTexture("resources/title.png");
+    explosionTexture = LoadTexture("resources/explosion.png");
     
     spriteSheetPlayer = LoadTexture("resources/player2.png"); 
     for (int i = 0; i < frameCountPlayer; i++) {
@@ -266,6 +308,8 @@ InitAudioDevice();
     UnloadTexture(spriteSheetWater);
     UnloadTexture(spriteSheetRipple);
     UnloadTexture(spriteSheetDuck);
+    UnloadTexture(explosionTexture);
+    UnloadTexture(titleTexture);
     
     UnloadSound(splashSfxR);
     UnloadSound(splashSfxL);

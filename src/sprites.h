@@ -9,6 +9,8 @@
 
 extern Texture2D spriteSheetPlayer;
 extern Sound popperSfx[];
+extern int ducksAdded;
+extern int score;
 
 // Sprite Definition
 typedef struct {
@@ -38,6 +40,6 @@ void NewBullit(Sprite bullits[], size_t size, int x, int y, int degrees);
 void DrawDucks(Sprite duckies[]);
 void NewDuck(Sprite duckies[]);
 void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]);
-
+int calculateDistance(Vector2 v1, Vector2 v2);
 
 #endif // SPRITES_H

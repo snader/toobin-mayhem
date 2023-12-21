@@ -3,6 +3,8 @@
 #include "particle_system.h"
 #include <stdlib.h>
 
+extern Texture2D explosionTexture;
+
 Explosion explosions[MAX_EXPLOSIONS];
 
 void InitializeExplosion(Vector2 position) {
@@ -46,7 +48,8 @@ void UpdateExplosions(void) {
 void DrawExplosions(void) {
     for (int i = 0; i < MAX_EXPLOSIONS; i++) {
         for (int j = 0; j < MAX_PARTICLES; j++) {
-            if (explosions[i].particles[j].inUse && explosions[i].particles[j].life > 0) {
+            if (explosions[i].particles[j].inUse && explosions[i].particles[j].life > 0) {                                            
+                
                 DrawPixelV(explosions[i].particles[j].position, explosions[i].particles[j].color);
             }
         }

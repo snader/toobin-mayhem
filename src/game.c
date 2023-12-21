@@ -3,7 +3,7 @@
 #include "particle_system.h"
 #include "game.h"
 #include <math.h>
-
+#include <stdio.h>
 
 
 
@@ -39,14 +39,18 @@ void UpdateDrawFrame(void)
             case SCREEN_TITLE:
             
                 player.frame = 0;
-                player.speed = 0;
-                player.degrees = 0;
+                player.speed = 0.4f;
+                player.degrees = GetRandomValue(-10,10);
                 player.x = screenWidth / 2;
-                player.y = screenHeight / 2;
+                player.y = (screenHeight / 2) + 50;
                 player.isAlive = ALIVE;
                 player.energy = 100.0f;
             
+                currentScreen = SCREEN_LEVEL;
+                break;
+            case SCREEN_LEVEL:
                 currentScreen = SCREEN_GAMEPLAY;
+                player.isAlive = ALIVE;
                 break;
             case SCREEN_GAMEPLAY:
                 // Handle gameplay actions
@@ -79,6 +83,11 @@ void UpdateDrawFrame(void)
             case SCREEN_TITLE:
                 DrawTitleScreen();
                 break;
+            case SCREEN_LEVEL:
+                UpdateGameplayScreen();
+                DrawGameplayScreen();
+                DrawLevelScreen();
+                break;            
             case SCREEN_GAMEPLAY:
                 if (IsKeyPressed(KEY_Q) || player.energy <= 0) {
                     currentScreen = SCREEN_GAMEOVER;
@@ -130,15 +139,16 @@ void UpdateGameplayScreen(void) {
     if (frameCount % 30 == 0) {
         waterFrame = GetRandomValue(0, 3);
         
-        if (GetRandomValue(1,10)>5) {
+        if (ducksAdded<levelDuckCount[level] && GetRandomValue(1,10)>5) {
             NewDuck(duckies);
+            
         }
     }     
 
     UpdatePlayerSprite(&player);  
     UpdateDucks(duckies, &player, bullits);
     UpdateExplosions();
-        
+      
 }
 
 /**
@@ -155,13 +165,7 @@ void DrawGameplayScreen(void) {
         }
     }
     
-    //DrawText(TextFormat("Rotation: %f", player.degrees), 100, 100, 20, WHITE);
-    //DrawText(TextFormat("bullits: %d", sizeof(bullits)), 100, 130, 20, WHITE);
-       
-    // Draw Sprites
-    //DrawEnemies(enemies, sizeof(enemies));
-    
-
+    DrawText(TextFormat("duckies: %d", ducksAdded), 10, 130, 20, WHITE);
     
     DrawDucks(duckies);
     
@@ -173,6 +177,25 @@ void DrawGameplayScreen(void) {
         
     DrawEnergyBar(player);
         
+}
+
+void DrawLevelScreen() {
+    
+    tmpCount++;
+    if (tmpCount>100) {
+        currentScreen = SCREEN_GAMEPLAY;
+        tmpCount=0;
+    }
+    
+
+    // Convert the integer to a string using sprintf
+    sprintf(levelText, "- LEVEL %d -", level);
+    
+    float x = screenWidth/2.0f - MeasureTextEx(konamiFont, levelText, konamiFont.baseSize, 2).x/2.0f;
+    
+    
+    DrawStyledText(levelText, (Vector2){x, 120}, WHITE, BLACK, 1, 1); 
+    
 }
 
 
@@ -225,8 +248,10 @@ void DrawGameoverScreen(void) {
     
     DrawDucks(duckies);
     
-    
-    DrawText("Game Over", 10, 10, 20, WHITE);
+    if (frameCount>20) {       
+        DrawStyledText("- GAME OVER -", (Vector2){80, 120}, WHITE, BLACK, 1, 1);               
+    }
+
 }
 
 
@@ -239,12 +264,14 @@ void DrawLogoScreen(void) {
 void DrawTitleScreen(void) {
     // Update logic for the title screen...
     Rectangle sourceRec = { 0, 0, titleTexture.width, titleTexture.height };
-        Rectangle destRec = { 0, 0, (float)screenWidth, (float)screenHeight };
-        Vector2 origin = { 0, 0 }; // No rotation, use top-left corner as origin
+    Rectangle destRec = { 0, 0, (float)screenWidth, (float)screenHeight };
+    Vector2 origin = { 0, 0 }; // No rotation, use top-left corner as origin
 
-        DrawTexturePro(titleTexture, sourceRec, destRec, origin, 0.0f, WHITE);
+    DrawTexturePro(titleTexture, sourceRec, destRec, origin, 0.0f, WHITE);
 
-
+    if (frameCount>20) {       
+        DrawStyledText("- PRESS SPACE TO PLAY -", (Vector2){45, 120}, WHITE, BLACK, 1, 1);               
+    }
 }
 
 void DrawEndingScreen(void) {
