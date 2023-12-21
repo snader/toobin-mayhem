@@ -374,7 +374,7 @@ void NewRipple(Sprite ripples[], size_t size, int x, int y) {
 *
 */
 void DrawDucks(Sprite duckies[]) {
-    for (int i = 0; i < 20; i++) {                                 
+    for (int i = 1; i < nrOfDucks; i++) {                                 
                        
         if (duckies[i].isAlive == ALIVE) {
             
@@ -441,8 +441,21 @@ void DrawDucks(Sprite duckies[]) {
     }
 }
 
+int DucksAlive() {
+    int count = 0;
+    for (int i = 1; i < nrOfDucks; i++) {
+        if (duckies[i].isAlive == ALIVE) {
+            count++;
+        }
+    }
+    
+    
+    return count;
+        
+}
+
 void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
-    for (int i = 0; i < 100; i++) {
+    for (int i = 1; i < nrOfDucks; i++) {
                 
         if (duckies[i].isAlive == ALIVE) {
             
@@ -467,7 +480,7 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
                             
                             // not counting for amount shot
                             ducksAdded--;
-                            score--;
+                            score-=2;
                             if (score<0) {
                                 score = 0;
                             }
@@ -538,6 +551,7 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
                         if (CheckCollisionPointCircle((Vector2){bullits[b].x, bullits[b].y}, (Vector2){duckies[i].x, duckies[i].y}, 4)) {
                             duckies[i].isAlive = DEAD;
                             bullits[b].isAlive = DEAD;
+                            ducksShot++;
                             score = score + 10;
                             Vector2 explosionPosition = {bullits[b].x, bullits[b].y};  
                             InitializeExplosion(explosionPosition);  
@@ -586,7 +600,7 @@ void NewDuck(Sprite duckies[]) {
     
     float randomFloat = (float)GetRandomValue(1, 3) / 10;
     
-    for (int i = 0; i < 100; i++) {
+    for (int i = 1; i < nrOfDucks; i++) {
         // reuse dead duck       
 
         if (duckies[i].isAlive == DEAD) {

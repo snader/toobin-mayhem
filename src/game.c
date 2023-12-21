@@ -6,6 +6,59 @@
 #include <stdio.h>
 
 
+void SwitchGameScreen(int GameScreen) 
+{
+    currentScreen = GameScreen;
+    switch (currentScreen) {
+        case SCREEN_LOGO:
+            
+            break;
+        case SCREEN_TITLE:
+        
+            level = 1;
+        
+            player.frame = 0;
+            player.speed = 0.4f;
+            player.degrees = GetRandomValue(-10,10);
+            player.x = screenWidth / 2;
+            player.y = (screenHeight / 2) + 50;
+            player.isAlive = ALIVE;
+            player.energy = 100.0f;    
+
+            for (int i = 1; i < nrOfDucks; i++) {   
+                duckies[i].isAlive = DEAD;
+            }            
+        
+            break;
+        case SCREEN_LEVEL:
+        
+            //if (level>1) {
+                PlaySound(inflateSfx);
+            //}
+            player.energy += 10.0f;
+            if (player.energy>100) {
+                player.energy = 100.0f;
+            }
+            ducksAdded = 0;        
+            ducksShot = 0;
+            player.isAlive = ALIVE;
+            break;
+        case SCREEN_GAMEPLAY:
+           
+            break;
+        case SCREEN_GAMEOVER:
+            
+            
+            break;    
+        case SCREEN_ENDING:
+            break;
+        default:
+           
+            break;
+    }
+    
+}
+
 
 // Update and draw frame
 void UpdateDrawFrame(void)
@@ -34,36 +87,26 @@ void UpdateDrawFrame(void)
     if (IsKeyPressed(KEY_SPACE)) {
         switch (currentScreen) {
             case SCREEN_LOGO:
-                currentScreen = SCREEN_TITLE;
+                SwitchGameScreen(SCREEN_TITLE); //currentScreen = SCREEN_TITLE;
                 break;
-            case SCREEN_TITLE:
-            
-                player.frame = 0;
-                player.speed = 0.4f;
-                player.degrees = GetRandomValue(-10,10);
-                player.x = screenWidth / 2;
-                player.y = (screenHeight / 2) + 50;
-                player.isAlive = ALIVE;
-                player.energy = 100.0f;
-            
-                currentScreen = SCREEN_LEVEL;
+            case SCREEN_TITLE:                           
+                SwitchGameScreen(SCREEN_LEVEL);            
                 break;
             case SCREEN_LEVEL:
-                currentScreen = SCREEN_GAMEPLAY;
-                player.isAlive = ALIVE;
+                SwitchGameScreen(SCREEN_GAMEPLAY);                
                 break;
             case SCREEN_GAMEPLAY:
-                // Handle gameplay actions
-                    //currentScreen = SCREEN_GAMEOVER;
+                
                 break;
             case SCREEN_GAMEOVER:
-                // Handle gameover actions
-                currentScreen = SCREEN_TITLE;
+                SwitchGameScreen(SCREEN_TITLE); 
+               
                 break;    
             case SCREEN_ENDING:
                 break;
             default:
-                currentScreen = SCREEN_TITLE;
+                SwitchGameScreen(SCREEN_TITLE); 
+                
                 break;
         }
     }
@@ -81,6 +124,8 @@ void UpdateDrawFrame(void)
                 DrawLogoScreen();
                 break;
             case SCREEN_TITLE:
+                     
+            
                 DrawTitleScreen();
                 break;
             case SCREEN_LEVEL:
@@ -90,7 +135,7 @@ void UpdateDrawFrame(void)
                 break;            
             case SCREEN_GAMEPLAY:
                 if (IsKeyPressed(KEY_Q) || player.energy <= 0) {
-                    currentScreen = SCREEN_GAMEOVER;
+                    SwitchGameScreen(SCREEN_GAMEOVER);
                     player.energy = -10; // in case of Q
                 }
             
@@ -140,14 +185,18 @@ void UpdateGameplayScreen(void) {
         waterFrame = GetRandomValue(0, 3);
         
         if (ducksAdded<levelDuckCount[level] && GetRandomValue(1,10)>5) {
-            NewDuck(duckies);
-            
+            NewDuck(duckies);            
         }
     }     
 
     UpdatePlayerSprite(&player);  
     UpdateDucks(duckies, &player, bullits);
     UpdateExplosions();
+    
+    if (ducksShot>=levelDuckCount[level] && currentScreen!=SCREEN_LEVEL) {
+        SwitchGameScreen(SCREEN_LEVEL);
+        level++;
+    }
       
 }
 
@@ -165,7 +214,7 @@ void DrawGameplayScreen(void) {
         }
     }
     
-    DrawText(TextFormat("duckies: %d", ducksAdded), 10, 130, 20, WHITE);
+    //DrawText(TextFormat("duckies: %d", ducksAdded), 10, 130, 20, WHITE);
     
     DrawDucks(duckies);
     
@@ -176,6 +225,8 @@ void DrawGameplayScreen(void) {
     DrawExplosions();
         
     DrawEnergyBar(player);
+    
+    //DrawText(TextFormat("ducksalive: %d", DucksAlive()), 10, 130, 20, WHITE);
         
 }
 
@@ -190,11 +241,12 @@ void DrawLevelScreen() {
 
     // Convert the integer to a string using sprintf
     sprintf(levelText, "- LEVEL %d -", level);
-    
-    float x = screenWidth/2.0f - MeasureTextEx(konamiFont, levelText, konamiFont.baseSize, 2).x/2.0f;
-    
-    
+    float x = screenWidth/2.0f - MeasureTextEx(konamiFont, levelText, konamiFont.baseSize, 2).x/2.0f; 
     DrawStyledText(levelText, (Vector2){x, 120}, WHITE, BLACK, 1, 1); 
+    
+    sprintf(levelText, "Shoot %d rubber duckies", levelDuckCount[level]);
+    x = screenWidth/2.0f - MeasureTextEx(konamiFont, levelText, konamiFont.baseSize, 2).x/2.0f; 
+    DrawStyledText(levelText, (Vector2){x, 135}, WHITE, BLACK, 1, 1); 
     
 }
 

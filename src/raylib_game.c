@@ -54,6 +54,8 @@ unsigned int prevScreenScale = 1;
 
 int frameCount = 0;
 int myCount=0;
+int nrOfDucks = 100;
+int ducksShot = 0;
 
 RenderTexture2D target = { 0 };  // Initialized at init
 
@@ -73,10 +75,11 @@ int EXPLODING = 3;
 int duckHit = 40;
 
 int level = 1;
-int levelDuckCount[20] = {5, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95};
+int levelDuckCount[21] = {0, 5, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95};
 int ducksAdded = 0;
 
 int score = 0;
+char formattedScore[5];
 
 // Player sprite
 Texture2D spriteSheetPlayer;
@@ -117,6 +120,7 @@ Sound quackSfx[4];
 Sound ouchSfx[3];
 Sound explodingTubeSfx;
 Sound popSfx;
+Sound inflateSfx;
 
 Font konamiFont;
 int tmpCount = 0;
@@ -131,11 +135,11 @@ Sprite player;
 //----------------------------------------------------------------------------------
 void DrawEnergyBar(Sprite player) {
     // Calculate bar dimensions based on energy level
-    int x = 40;
-    int y = 5;
-    int width = 80;
-    int height = 9;
-    float barWidth = (80.0) * player.energy / 100.0;
+    int x = 75;
+    int y = 6;
+    int width = 70;
+    int height = 10;
+    float barWidth = width * (player.energy / 100.0);
 
     // Draw the bar
     if (player.energy>50) {
@@ -149,10 +153,17 @@ void DrawEnergyBar(Sprite player) {
     // Draw white border
     DrawRectangleLinesEx((Rectangle){x, y, width, height}, 1, WHITE);
     
-    DrawStyledText("TUBE", (Vector2){5, y}, WHITE, BLACK, 0, 1);   
+    DrawStyledText("TUBE AIR", (Vector2){10, y}, WHITE, BLACK, 1, 1);   
     
-    sprintf(levelText, "SCORE %d", score);
-    DrawStyledText(levelText, (Vector2){130, y}, WHITE, BLACK, 0 ,1);  
+    sprintf(levelText, "DUCKS SHOT %d", ducksShot);
+    DrawStyledText(levelText, (Vector2){155, y}, WHITE, BLACK, 1, 1);   
+    
+    sprintf(levelText, "SCORE %04d", score);
+    //sprintf(levelText, "SCORE %d", score);
+    DrawStyledText(levelText, (Vector2){155, y+12}, WHITE, BLACK, 1 ,1);  
+    
+    sprintf(levelText, "LEVEL %02d", level);
+    DrawStyledText(levelText, (Vector2){10, y+12}, WHITE, BLACK, 1 ,1);  
 }
 
 
@@ -207,6 +218,7 @@ InitAudioDevice();
     ouchSfx[1] = LoadSound("resources/ouch1.wav");
     ouchSfx[2] = LoadSound("resources/ouch2.wav");
     popSfx = LoadSound("resources/pop.wav");
+    inflateSfx = LoadSound("resources/inflate.wav");
     
     explodingTubeSfx = LoadSound("resources/explodingtube.wav");
     //reloadSfx = LoadSound("resources/reload.wav");
@@ -221,8 +233,9 @@ InitAudioDevice();
         bullits[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
     }
     
-    for (int i = 0; i < 20; i++) {
+    for (int i = 1; i < nrOfDucks; i++) {
         duckies[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
+       
     }
     
    
@@ -323,6 +336,8 @@ InitAudioDevice();
     UnloadSound(explodingTubeSfx);
     UnloadSound(ouchSfx[1]);
     UnloadSound(ouchSfx[2]);
+    UnloadSound(popSfx);
+    UnloadSound(inflateSfx);
     
     free(ripples);
     free(bullits);
