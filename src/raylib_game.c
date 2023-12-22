@@ -100,8 +100,14 @@ Rectangle frameRecCounter[5];
 Texture2D spriteSheetDuck;
 Rectangle frameRecDuck[4];
 
+// titelscreen
 Texture2D titleTexture; 
+// explosion
 Texture2D explosionTexture;
+
+// overlay
+Texture2D overlayTexture; 
+
 
 int waterFrame = 0;
 int popperSoundNr = 0;
@@ -116,6 +122,7 @@ Sprite* bullits = NULL;
 Sound splashSfxL;
 Sound splashSfxR;
 Sound popperSfx[4];
+Sound scratchSfx[3];
 Sound quackSfx[4];
 Sound ouchSfx[3];
 Sound explodingTubeSfx;
@@ -218,6 +225,8 @@ InitAudioDevice();
     ouchSfx[1] = LoadSound("resources/ouch1.wav");
     ouchSfx[2] = LoadSound("resources/ouch2.wav");
     popSfx = LoadSound("resources/pop.wav");
+    //scratchSfx[1] = LoadSound("resources/scratch1.wav");
+    scratchSfx[2] = LoadSound("resources/scratch2.wav");
     inflateSfx = LoadSound("resources/inflate.wav");
     
     explodingTubeSfx = LoadSound("resources/explodingtube.wav");
@@ -255,6 +264,7 @@ InitAudioDevice();
     konamiFont = LoadFont("resources/font.png");
     
     titleTexture = LoadTexture("resources/title.png");
+    overlayTexture = LoadTexture("resources/boardwalk.png");
     explosionTexture = LoadTexture("resources/explosion.png");
     
     spriteSheetPlayer = LoadTexture("resources/player2.png"); 
@@ -323,6 +333,7 @@ InitAudioDevice();
     UnloadTexture(spriteSheetDuck);
     UnloadTexture(explosionTexture);
     UnloadTexture(titleTexture);
+    UnloadTexture(overlayTexture);
     
     UnloadSound(splashSfxR);
     UnloadSound(splashSfxL);
@@ -332,6 +343,8 @@ InitAudioDevice();
     UnloadSound(quackSfx[1]);
     UnloadSound(quackSfx[2]);
     UnloadSound(quackSfx[3]);
+    //UnloadSound(scratchSfx[1]);
+    UnloadSound(scratchSfx[2]);
     
     UnloadSound(explodingTubeSfx);
     UnloadSound(ouchSfx[1]);

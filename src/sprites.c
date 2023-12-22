@@ -236,10 +236,37 @@ void UpdatePlayerSprite(Sprite *sprite) {
        
     sprite->x += sprite->speed * sin(sprite->degrees * DEG2RAD);
     sprite->y += sprite->speed * -cos(sprite->degrees * DEG2RAD);
+    
+    //
+    // Clamp the sprite within the screen bounds 
+
+    int doScratch = 0;
+    if (sprite->x > 243) {
+        sprite->x = 243;  
+        doScratch = 1;
+            
+    }
+    if (sprite->x < 13) {
+        sprite->x = 13;
+        doScratch = 1;
         
-    // Clamp the sprite within the screen bounds
-    sprite->x = fmin(fmax(sprite->x, 0), screenWidth - 1);
-    sprite->y = fmin(fmax(sprite->y, 0), screenHeight - 1); 
+    }
+    if (sprite->y < 38) {
+        sprite->y = 38;
+        doScratch = 1;
+      
+    }
+    if (sprite->y > 243) {
+        sprite->y = 243;
+        doScratch = 1;
+    }
+    if (doScratch ==1 && !IsSoundPlaying(scratchSfx[2]) && sprite->speed > 0.5f  && sprite->frameDelay==10) {           
+        PlaySound(scratchSfx[2]);      
+        sprite->energy -= 1; 
+    }          
+          
+
+    ////
     
     // shooting - bullits
     if (sprite->frame == 8 && sprite->frameDelay>30) {        
@@ -459,7 +486,8 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
                 
         if (duckies[i].isAlive == ALIVE) {
             
-            if (duckies[i].x > 260 || duckies[i].x < -4 || duckies[i].y < -4 || duckies[i].y > 260) { 
+            // ducks at the borders of the screen
+            if (duckies[i].x > 250 || duckies[i].x < 5 || duckies[i].y < 30 || duckies[i].y > 250) { 
                 duckies[i].degrees += 180.0f;
                 if (duckies[i].degrees >= 360.0f) {
                    duckies[i].degrees -= 360.0f;
@@ -467,7 +495,7 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
             }              
             
             if (player->energy<=0) {
-                duckies[i].state = DEFAULT;
+                duckies[i].state = DEFAULT; // for game over, ducks go in rest mode
             } else {
                         
                 if (frameCount % 60 == 0) {
@@ -478,7 +506,7 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
                         if (duckies[i].counter<0) {
                             duckies[i].isAlive = DEAD;
                             
-                            // not counting for amount shot
+                            // not counting for amount shot total
                             ducksAdded--;
                             score-=2;
                             if (score<0) {
@@ -513,7 +541,9 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
             
                 if (CheckCollisionCircles((Vector2){duckies[i].x, duckies[i].y}, 3, (Vector2){player->x, player->y}, 18)) {
                                        
-                    duckies[i].degrees = player->degrees + GetRandomValue(-15,15);
+                    if (GetRandomValue(1,100)>50) {
+                        duckies[i].degrees = player->degrees + GetRandomValue(-15,15);
+                    }
                     
                     if (duckies[i].state != EXPLODING) {
                         duckies[i].speed = player->speed - (player->speed/5);
@@ -529,10 +559,10 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
                 }
                 
                 // lifespan and suicidal ducks.. based on the lifespan and level
-                if (duckies[i].state == DEFAULT && duckies[i].secondsAlive > (GetRandomValue(100,200)/10)) {
+                if (duckies[i].state == DEFAULT && duckies[i].secondsAlive > ((GetRandomValue(100,200)-level)/10)) {
                     duckies[i].counter = 4;
                     duckies[i].state = EXPLODING;      
-                    duckies[i].speed = GetRandomValue(2,10) / 10.0f;    
+                    duckies[i].speed = GetRandomValue(2,(10+level)) / 10.0f;    
                     
                    
                 }
@@ -609,16 +639,16 @@ void NewDuck(Sprite duckies[]) {
             duckies[i].speed = randomFloat;            
             
             if (tempr>5) {
-                tempx = 0;                
-                tempy = GetRandomValue(20,236);   
+                tempx = 5;                
+                tempy = GetRandomValue(30,236);   
                 duckies[i].degrees = GetRandomValue(10,170);                 
             } else if (tempr>0) {
-                tempx = 256;                
-                tempy = GetRandomValue(20,236);  
+                tempx = 250;                
+                tempy = GetRandomValue(30,236);  
                 duckies[i].degrees = GetRandomValue(190,350);                    
             } else if (tempr<-5) {
                 tempx = GetRandomValue(20,236);                  
-                tempy = 0;   
+                tempy = 30;   
                 duckies[i].degrees = GetRandomValue(100,270); 
             } else {   
                 if (GetRandomValue(1,10)>5) {
@@ -627,7 +657,7 @@ void NewDuck(Sprite duckies[]) {
                     duckies[i].degrees = GetRandomValue(5,85); 
                 }
                 tempx = GetRandomValue(20,236);
-                tempy = 256; 
+                tempy = 250; 
             }        
             
             duckies[i].isAlive = ALIVE;

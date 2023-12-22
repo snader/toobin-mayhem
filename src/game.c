@@ -32,9 +32,13 @@ void SwitchGameScreen(int GameScreen)
             break;
         case SCREEN_LEVEL:
         
-            //if (level>1) {
+            for (int i = 0; i < 49; i++) { 
+                bullits[i].isAlive = DEAD;            
+            }
+            if (level>1) {
                 PlaySound(inflateSfx);
-            //}
+            }
+            
             player.energy += 10.0f;
             if (player.energy>100) {
                 player.energy = 100.0f;
@@ -184,7 +188,14 @@ void UpdateGameplayScreen(void) {
     if (frameCount % 30 == 0) {
         waterFrame = GetRandomValue(0, 3);
         
-        if (ducksAdded<levelDuckCount[level] && GetRandomValue(1,10)>5) {
+        int randomCompare = 5;
+        if (level>5) {
+            randomCompare = 6;
+        } else if (level>10) {
+            randomCompare = 7;
+        }
+        
+        if (ducksAdded<levelDuckCount[level] && GetRandomValue(1,10)>randomCompare) {
             NewDuck(duckies);            
         }
     }     
@@ -216,16 +227,12 @@ void DrawGameplayScreen(void) {
     
     //DrawText(TextFormat("duckies: %d", ducksAdded), 10, 130, 20, WHITE);
     
-    DrawDucks(duckies);
-    
+    DrawDucks(duckies);   
     DrawPlayerSprite(&player);
-    
     DrawBullits(bullits, sizeof(bullits));
-    
     DrawExplosions();
-        
+    DrawFullscreen(overlayTexture);         
     DrawEnergyBar(player);
-    
     //DrawText(TextFormat("ducksalive: %d", DucksAlive()), 10, 130, 20, WHITE);
         
 }
@@ -233,7 +240,7 @@ void DrawGameplayScreen(void) {
 void DrawLevelScreen() {
     
     tmpCount++;
-    if (tmpCount>100) {
+    if (tmpCount>160) {
         currentScreen = SCREEN_GAMEPLAY;
         tmpCount=0;
     }
@@ -248,6 +255,8 @@ void DrawLevelScreen() {
     x = screenWidth/2.0f - MeasureTextEx(konamiFont, levelText, konamiFont.baseSize, 2).x/2.0f; 
     DrawStyledText(levelText, (Vector2){x, 135}, WHITE, BLACK, 1, 1); 
     
+    DrawFullscreen(overlayTexture);                
+    DrawEnergyBar(player);
 }
 
 
@@ -303,7 +312,10 @@ void DrawGameoverScreen(void) {
     if (frameCount>20) {       
         DrawStyledText("- GAME OVER -", (Vector2){80, 120}, WHITE, BLACK, 1, 1);               
     }
-
+    
+    DrawFullscreen(overlayTexture);
+    DrawEnergyBar(player);
+    
 }
 
 
@@ -315,11 +327,8 @@ void DrawLogoScreen(void) {
 
 void DrawTitleScreen(void) {
     // Update logic for the title screen...
-    Rectangle sourceRec = { 0, 0, titleTexture.width, titleTexture.height };
-    Rectangle destRec = { 0, 0, (float)screenWidth, (float)screenHeight };
-    Vector2 origin = { 0, 0 }; // No rotation, use top-left corner as origin
-
-    DrawTexturePro(titleTexture, sourceRec, destRec, origin, 0.0f, WHITE);
+    DrawFullscreen(titleTexture);
+    
 
     if (frameCount>20) {       
         DrawStyledText("- PRESS SPACE TO PLAY -", (Vector2){45, 120}, WHITE, BLACK, 1, 1);               
@@ -329,3 +338,11 @@ void DrawTitleScreen(void) {
 void DrawEndingScreen(void) {
     // Update logic for the ending screen...
 }
+
+void DrawFullscreen(Texture2D myTexture) {
+    Rectangle sourceRec = { 0, 0, myTexture.width, myTexture.height };
+    Rectangle destRec = { 0, 0, (float)screenWidth, (float)screenHeight };
+    Vector2 origin = { 0, 0 }; // No rotation, use top-left corner as origin
+    DrawTexturePro(myTexture, sourceRec, destRec, origin, 0.0f, WHITE);
+}
+    

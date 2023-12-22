@@ -34,6 +34,7 @@ extern Rectangle frameRecWater[4];
 extern Texture2D spriteSheetPlayer;
 extern Rectangle frameRecPlayer[11];
 extern Texture2D titleTexture;
+extern Texture2D overlayTexture;
 extern Sprite* ripples;
 extern Sprite* bullits;
 extern Sprite* duckies;
@@ -64,5 +65,6 @@ extern void DrawEndingScreen(void);
 extern void DrawLevelScreen(void);
 extern void DrawEnergyBar(Sprite player);
 extern void DrawStyledText(const char* text, Vector2 position, Color textColor, Color outlineColor, int outlineThickness, int bold);
+
 
 #endif // _GAME_H

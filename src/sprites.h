@@ -9,10 +9,12 @@
 
 extern Texture2D spriteSheetPlayer;
 extern Sound popperSfx[];
+extern Sound scratchSfx[];
 extern int ducksAdded;
 extern int score;
 extern int nrOfDucks;
 extern int ducksShot;
+extern int level;
 
 // Sprite Definition
 typedef struct {
@@ -44,5 +46,6 @@ void NewDuck(Sprite duckies[]);
 void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]);
 int calculateDistance(Vector2 v1, Vector2 v2);
 int ducksAlive();
+void DrawFullscreen(Texture2D overlayTexture);
 
 #endif // SPRITES_H
