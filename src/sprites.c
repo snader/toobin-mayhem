@@ -8,6 +8,8 @@
 extern Texture2D spriteSheetPlayer;
 extern Texture2D spriteSheetRipple;
 extern Texture2D spriteSheetDuck;
+extern Texture2D spriteSheetBirdWhite;
+extern Texture2D spriteSheetBirdBlue;
 extern Texture2D spriteCounter;
 extern Texture2D explosionTexture;
 extern int frameWidthPlayer;
@@ -16,8 +18,11 @@ extern float frameCountPlayer;
 extern Sound splashSfxL;
 extern Sound splashSfxR;
 extern Sound quackSfx[4];
+extern Sound seagullSfx[4];
+extern Sound fartSfx[4];
 extern Sound ouchSfx[3];
 extern Sound popSfx;
+extern Sound ewwSfx;
 extern Rectangle frameRecPlayer[];
 extern int DEAD;
 extern int ALIVE;
@@ -28,35 +33,14 @@ extern int duckHit;
 extern Sprite* ripples;
 extern Sprite* bullits;
 extern Sprite* duckies;
+extern Sprite* birds;
+extern Sprite* shit;
 extern int frameCount;
 extern int myCount;
 extern int popperSoundNr; 
 extern int screenWidth;
 extern int screenHeight;
 
-
-
-/*
-void DrawEnemies(Sprite enemies[], size_t size) {
-    for (size_t i = 0; i < size; ++i) {
-        enemies[i].degrees++;
-        
-        if (enemies[i].isAlive == 1) {
-            Rectangle sourceRec = {enemies[i].frame * frameWidthPlayer, 0, frameWidthPlayer, frameHeightPlayer};
-            Vector2 origin = {frameWidthPlayer / 2, frameHeightPlayer / 2}; // Set the origin to the center of the sprite
-
-            DrawTexturePro(
-                spriteSheetPlayer,
-                sourceRec,
-                (Rectangle){enemies[i].x, enemies[i].y, frameWidthPlayer, frameHeightPlayer},
-                origin,
-                enemies[i].degrees,
-                WHITE
-            );
-        }
-    }
-}
-*/
 
 
 /**
@@ -112,6 +96,8 @@ void DrawPlayerSprite(Sprite *sprite) {
         sprite->degrees,
         WHITE
     );
+    
+    //DrawText(TextFormat("Xp: %.2f", sprite->x), 10, 70, 20, WHITE);
     
     //DrawCircleLines(sprite->x , sprite->y , 10, WHITE);
     //DrawCircleLines(sprite->x , sprite->y , 20, WHITE);
@@ -520,7 +506,7 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
 
                             int distance = calculateDistance(explosionPosition, playerPosition);
                             if (distance < 25) {
-                                player->energy = player->energy - ((duckHit-distance)*0.5f);
+                                player->energy = player->energy - ((duckHit-distance)*0.6f);
                                 if (distance<10) {
                                     PlaySound(ouchSfx[2]);
                                 } else {
@@ -679,3 +665,273 @@ void NewDuck(Sprite duckies[]) {
     }
 }
 
+/*
+*
+*/
+void NewBird(Sprite birds[], Sprite *player) {
+    
+    int tempx, tempy;
+    int tempr = GetRandomValue(-10,10);
+    
+    float randomFloat = (float)GetRandomValue(6, 9) / 10;
+    
+    for (int i = 1; i < nrOfBirds; i++) {
+        // reuse dead bird       
+
+        if (birds[i].isAlive == DEAD) {
+                       
+            birds[i].secondsAlive = 0;
+            birds[i].speed = randomFloat; 
+
+            tempy = player->y - 40 + GetRandomValue(-5,5);            
+            
+            if (tempr>0) {
+                tempx = -20;                
+                birds[i].frame = 2;   
+                birds[i].degrees = GetRandomValue(70,120);                 
+            } else {
+                tempx = 280;                
+                birds[i].frame = 0;
+                birds[i].degrees = GetRandomValue(250,300);                    
+            
+            }        
+            
+            birds[i].isAlive = ALIVE;
+            birds[i].x = tempx;
+            birds[i].y = tempy;
+            
+            birds[i].state = GetRandomValue(0,1);
+            birds[i].counter = 5;
+            
+            birdsAdded++;
+ 
+            
+            break;
+        }
+        
+        
+    }
+}
+
+/*
+*
+*/
+void NewShit(Sprite shit[], Sprite birds[], Sprite *player) {
+    
+    int randomnr;
+   for (int j = 1; j < nrOfBirds; j++) {
+       
+       if (birds[j].isAlive == ALIVE && birds[j].x>(player->x - 30) && birds[j].x<(player->x +30)) { // 
+       
+            for (int i = 1; i < nrOfBirds; i++) {
+                // reuse dead shit       
+                if (shit[i].isAlive == DEAD) {
+                               
+                    shit[i].secondsAlive = 0;
+                    shit[i].speed = birds[j].speed; 
+                    shit[i].degrees = birds[j].degrees; 
+                                
+                    shit[i].isAlive = ALIVE;
+                    shit[i].x = birds[j].x;
+                    shit[i].y = birds[j].y;
+                    
+                    if (GetRandomValue(0,10)>3) {
+                        randomnr = GetRandomValue(1,3);
+                        if (!IsSoundPlaying(fartSfx[randomnr])) {
+                            PlaySound(fartSfx[randomnr]);  
+                        }                            
+                    }
+                    break;
+                }
+      
+            }
+       }
+       
+       
+   }
+   
+
+  
+}
+
+
+void UpdateShit(Sprite shit[], Sprite *player) {
+    for (int i = 1; i < nrOfBirds; i++) {
+                
+        if (shit[i].isAlive == ALIVE) {
+            
+            shit[i].secondsAlive++;
+            shit[i].speed -= 0.1f;
+            if (shit[i].speed < 0) {
+                shit[i].speed = 0;
+            }
+            
+            // move the shit
+            shit[i].x += shit[i].speed * sin(shit[i].degrees * DEG2RAD);
+            shit[i].y += shit[i].speed * -cos(shit[i].degrees * DEG2RAD);    
+
+            shit[i].y += 0.6f;
+            
+            Vector2 shitPosition = {shit[i].x, shit[i].y};                         
+            Vector2 playerPosition = {player->x, player->y};
+            int distance = calculateDistance(shitPosition, playerPosition);
+                          
+            
+            if (shit[i].secondsAlive>30 && distance<15 ) {
+                
+                if (!IsSoundPlaying(ewwSfx)) {
+                    PlaySound(ewwSfx);
+                }
+                player->speed = player->speed / 3;
+                player->energy -= 3;
+                shit[i].isAlive = DEAD; 
+            }
+            
+ 
+            if (shit[i].secondsAlive > 80) { 
+                shit[i].isAlive = DEAD;                 
+            }           
+                 
+            
+            
+        }     
+        
+    }
+    
+}
+
+void UpdateBirds(Sprite birds[], Sprite *player) {
+    
+    int soundnr;
+    for (int i = 1; i < nrOfBirds; i++) {
+                
+        if (birds[i].isAlive == ALIVE) {
+            
+            // ducks at the borders of the screen
+            if (birds[i].x > 290 || birds[i].x < -40 || birds[i].y < -40 || birds[i].y > 290) { 
+                birds[i].isAlive = DEAD;  
+                birdsAdded--;
+            }              
+                 
+            // move the birds
+            birds[i].x += birds[i].speed * sin(birds[i].degrees * DEG2RAD);
+            birds[i].y += birds[i].speed * -cos(birds[i].degrees * DEG2RAD);    
+
+            soundnr = GetRandomValue(1,3);
+            if (GetRandomValue(0,100)>70 && frameCount==50 && !IsSoundPlaying(seagullSfx[soundnr])) {
+               
+                PlaySound(seagullSfx[soundnr]);
+            }
+            
+        }     
+        
+    }
+    
+    
+    
+}
+
+
+/**
+*
+*/
+void DrawBirds(Sprite birds[]) {
+    
+    int myCount = 0;
+    for (int i = 1; i < nrOfBirds; i++) {                                 
+                       
+        if (birds[i].isAlive == ALIVE) {
+            
+            myCount++;
+            
+            if (frameCount > 40) {    
+                if (birds[i].frame==0) {         
+                    birds[i].frame = 1;                               
+                }
+                if (birds[i].frame==2) {          
+                    birds[i].frame = 3;                               
+                }
+            } else {                
+                if (birds[i].frame==1) {           
+                    birds[i].frame = 0;                               
+                }     
+                if (birds[i].frame==3) {            
+                    birds[i].frame = 2;                               
+                }                
+            }         
+            
+            birds[i].drawFrame = birds[i].frame;
+
+            
+            Rectangle sourceRec = {birds[i].drawFrame * 18, 0, 18, 16}; // 
+            Vector2 origin = {18 / 2, 16 / 2}; // Set the origin to the center of the sprite                   
+
+            if (birds[i].state == 1) {
+                DrawTexturePro(
+                    spriteSheetBirdWhite,
+                    sourceRec,
+                    (Rectangle){birds[i].x + 15, birds[i].y + 50, 18, 16},
+                    origin,
+                    0,
+                    Fade(BLACK, 0.15f)
+                ); 
+                DrawTexturePro(
+                    spriteSheetBirdWhite,
+                    sourceRec,
+                    (Rectangle){birds[i].x, birds[i].y, 18, 16},
+                    origin,
+                    0,
+                    WHITE
+                );        
+            } else {
+                DrawTexturePro(
+                    spriteSheetBirdBlue,
+                    sourceRec,
+                    (Rectangle){birds[i].x + 15, birds[i].y + 50, 18, 16},
+                    origin,
+                    0,
+                    Fade(BLACK, 0.15f)
+                ); 
+                DrawTexturePro(
+                    spriteSheetBirdBlue,
+                    sourceRec,
+                    (Rectangle){birds[i].x, birds[i].y, 18, 16},
+                    origin,
+                    0,
+                    WHITE
+                );   
+            }
+
+            //DrawText(TextFormat("Xb: %.2f", birds[i].x), 10, 50, 20, WHITE);
+            
+          // DrawCircleLines(duckies[i].x , duckies[i].y , 5, WHITE);
+            
+           // DrawText(TextFormat("bird: %d", myCount), 10, 150, 20, WHITE);
+           // if (ripples[i].frame>30) {
+           //     ripples[i].isAlive = DEAD;
+           //     ripples[i].frame=0;
+            //}
+            
+        }
+        
+        
+    }
+}
+
+
+void DrawShit(Sprite shit[]) {
+    
+    int myCount = 0;
+    for (int i = 1; i < nrOfBirds; i++) {                                 
+                       
+        if (shit[i].isAlive == ALIVE) {
+            myCount++;
+           DrawCircle(shit[i].x , shit[i].y , 1, WHITE);
+          
+            
+        }
+        
+        
+    }
+    //DrawText(TextFormat("shit: %d", myCount), 10, 150, 20, WHITE);
+}

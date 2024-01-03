@@ -55,6 +55,7 @@ unsigned int prevScreenScale = 1;
 int frameCount = 0;
 int myCount=0;
 int nrOfDucks = 100;
+int nrOfBirds = 5;
 int ducksShot = 0;
 
 RenderTexture2D target = { 0 };  // Initialized at init
@@ -77,6 +78,7 @@ int duckHit = 40;
 int level = 1;
 int levelDuckCount[21] = {0, 5, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95};
 int ducksAdded = 0;
+int birdsAdded = 0;
 
 int score = 0;
 char formattedScore[5];
@@ -100,6 +102,11 @@ Rectangle frameRecCounter[5];
 Texture2D spriteSheetDuck;
 Rectangle frameRecDuck[4];
 
+Texture2D spriteSheetBirdWhite;
+Rectangle frameRecBirdWhite[4];
+
+Texture2D spriteSheetBirdBlue;
+Rectangle frameRecBirdBlue[4];
 // titelscreen
 Texture2D titleTexture; 
 // explosion
@@ -116,7 +123,7 @@ int popperSoundNr = 0;
 Texture2D spriteSheetRipple;
 Rectangle frameRecRipple[4]; 
 // Array of enemies
-Sprite* ripples = NULL;  // Declare a pointer to Enemy
+Sprite* ripples = NULL;  // Declare a pointer to sEnemy
 Sprite* bullits = NULL;
 
 Sound splashSfxL;
@@ -124,9 +131,12 @@ Sound splashSfxR;
 Sound popperSfx[4];
 Sound scratchSfx[3];
 Sound quackSfx[4];
+Sound seagullSfx[4];
 Sound ouchSfx[3];
+Sound fartSfx[4];
 Sound explodingTubeSfx;
 Sound popSfx;
+Sound ewwSfx;
 Sound inflateSfx;
 
 Font konamiFont;
@@ -135,6 +145,8 @@ char levelText[50];
 
 // Array of enemies
 Sprite* duckies = NULL;  // Declare a pointer to Sprite
+Sprite* birds = NULL;
+Sprite* shit = NULL;
 Sprite player; 
 
 //----------------------------------------------------------------------------------
@@ -208,11 +220,8 @@ int main(void)
     SetTraceLogLevel(LOG_NONE);         // Disable raylib trace log messsages
 #endif
 
-InitAudioDevice();
-
+InitAudioDevice(); 
     
-    
-
     // soundfx    
     splashSfxL = LoadSound("resources/splashLow.wav");
     splashSfxR = LoadSound("resources/splashHigh.wav");
@@ -222,9 +231,18 @@ InitAudioDevice();
     quackSfx[1] = LoadSound("resources/quack1.wav");
     quackSfx[2] = LoadSound("resources/quack2.wav");
     quackSfx[3] = LoadSound("resources/quack3.wav");
+    seagullSfx[1] = LoadSound("resources/seagull1.wav");
+    seagullSfx[2] = LoadSound("resources/seagull2.wav");
+    seagullSfx[3] = LoadSound("resources/seagull3.wav");
+    
+    fartSfx[1] = LoadSound("resources/fart1.wav");
+    fartSfx[2] = LoadSound("resources/fart2.wav");
+    fartSfx[3] = LoadSound("resources/fart3.wav");
+    
     ouchSfx[1] = LoadSound("resources/ouch1.wav");
     ouchSfx[2] = LoadSound("resources/ouch2.wav");
     popSfx = LoadSound("resources/pop.wav");
+    ewwSfx = LoadSound("resources/eww.wav");
     //scratchSfx[1] = LoadSound("resources/scratch1.wav");
     scratchSfx[2] = LoadSound("resources/scratch2.wav");
     inflateSfx = LoadSound("resources/inflate.wav");
@@ -235,6 +253,8 @@ InitAudioDevice();
     
     // Initialize enemies array
     duckies = (Sprite*)malloc(100 * sizeof(Sprite));  // Assuming initial size is 50
+    birds = (Sprite*)malloc(6 * sizeof(Sprite));
+    shit = (Sprite*)malloc(6 * sizeof(Sprite));
     ripples = (Sprite*)malloc(10 * sizeof(Sprite));
     bullits = (Sprite*)malloc(50 * sizeof(Sprite));
     
@@ -243,10 +263,14 @@ InitAudioDevice();
     }
     
     for (int i = 1; i < nrOfDucks; i++) {
-        duckies[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
-       
+        duckies[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};       
     }
-    
+    for (int i = 1; i < nrOfBirds; i++) {
+        birds[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};     
+    }
+    for (int i = 1; i < nrOfBirds; i++) {
+        shit[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};     
+    }
    
     player = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
  
@@ -294,6 +318,20 @@ InitAudioDevice();
         frameRecDuck[i].y = 0;
         frameRecDuck[i].width = 10;
         frameRecDuck[i].height = 10;
+    }
+    spriteSheetBirdWhite = LoadTexture("resources/bird2.png"); 
+    for (int i = 0; i < 4; i++) {
+        frameRecBirdWhite[i].x = i * 18;  // Adjust based on your sprite sheet layout
+        frameRecBirdWhite[i].y = 0;
+        frameRecBirdWhite[i].width = 18;
+        frameRecBirdWhite[i].height = 16;
+    }  
+    spriteSheetBirdBlue = LoadTexture("resources/bird1.png"); 
+    for (int i = 0; i < 4; i++) {
+        frameRecBirdBlue[i].x = i * 18;  // Adjust based on your sprite sheet layout
+        frameRecBirdBlue[i].y = 0;
+        frameRecBirdBlue[i].width = 18;
+        frameRecBirdBlue[i].height = 16;
     }  
     spriteCounter = LoadTexture("resources/count.png"); 
     for (int i = 0; i < 4; i++) {
@@ -302,6 +340,8 @@ InitAudioDevice();
         frameRecCounter[i].width = 5;
         frameRecCounter[i].height = 5;
     }  
+    
+   
     
     // Render texture to draw full screen, enables screen scaling
     // NOTE: If screen is scaled, mouse input should be scaled proportionally
@@ -331,6 +371,8 @@ InitAudioDevice();
     UnloadTexture(spriteSheetWater);
     UnloadTexture(spriteSheetRipple);
     UnloadTexture(spriteSheetDuck);
+    UnloadTexture(spriteSheetBirdWhite);
+    UnloadTexture(spriteSheetBirdBlue);
     UnloadTexture(explosionTexture);
     UnloadTexture(titleTexture);
     UnloadTexture(overlayTexture);
@@ -343,8 +385,15 @@ InitAudioDevice();
     UnloadSound(quackSfx[1]);
     UnloadSound(quackSfx[2]);
     UnloadSound(quackSfx[3]);
+    UnloadSound(seagullSfx[1]);
+    UnloadSound(seagullSfx[2]);
+    UnloadSound(seagullSfx[3]);
+    UnloadSound(fartSfx[1]);
+    UnloadSound(fartSfx[2]);
+    UnloadSound(fartSfx[3]);
     //UnloadSound(scratchSfx[1]);
     UnloadSound(scratchSfx[2]);
+    UnloadSound(ewwSfx);
     
     UnloadSound(explodingTubeSfx);
     UnloadSound(ouchSfx[1]);
@@ -355,6 +404,8 @@ InitAudioDevice();
     free(ripples);
     free(bullits);
     free(duckies);
+    free(birds);
+    free(shit);
        
     CloseAudioDevice();   
 

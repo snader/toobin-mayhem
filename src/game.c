@@ -43,7 +43,8 @@ void SwitchGameScreen(int GameScreen)
             if (player.energy>100) {
                 player.energy = 100.0f;
             }
-            ducksAdded = 0;        
+            ducksAdded = 0;      
+            birdsAdded = 0;            
             ducksShot = 0;
             player.isAlive = ALIVE;
             break;
@@ -188,20 +189,28 @@ void UpdateGameplayScreen(void) {
     if (frameCount % 30 == 0) {
         waterFrame = GetRandomValue(0, 3);
         
-        int randomCompare = 5;
+        int randomCompare = 6;
         if (level>5) {
-            randomCompare = 6;
+            randomCompare = 5;
         } else if (level>10) {
-            randomCompare = 7;
+            randomCompare = 4;
         }
         
         if (ducksAdded<levelDuckCount[level] && GetRandomValue(1,10)>randomCompare) {
             NewDuck(duckies);            
         }
+        if (birdsAdded<1 && GetRandomValue(1,9)>randomCompare) {
+            NewBird(birds, &player);            
+        }
+        if (birdsAdded>0 && GetRandomValue(1,10)>randomCompare) {  //  
+            NewShit(shit, birds, &player);
+        }
     }     
 
     UpdatePlayerSprite(&player);  
     UpdateDucks(duckies, &player, bullits);
+    UpdateShit(shit, &player);
+    UpdateBirds(birds, &player);
     UpdateExplosions();
     
     if (ducksShot>=levelDuckCount[level] && currentScreen!=SCREEN_LEVEL) {
@@ -231,9 +240,12 @@ void DrawGameplayScreen(void) {
     DrawPlayerSprite(&player);
     DrawBullits(bullits, sizeof(bullits));
     DrawExplosions();
-    DrawFullscreen(overlayTexture);         
+    DrawFullscreen(overlayTexture);  
+    DrawShit(shit);   
+    DrawBirds(birds);  
+     
     DrawEnergyBar(player);
-    //DrawText(TextFormat("ducksalive: %d", DucksAlive()), 10, 130, 20, WHITE);
+    //DrawText(TextFormat("shit: %d", DucksAlive()), 10, 130, 20, WHITE);
         
 }
 
@@ -288,6 +300,8 @@ void UpdateGameoverScreen(void) {
     }
     //UpdatePlayerSprite(&player);   
     UpdateDucks(duckies, &player, bullits);
+    UpdateShit(shit, &player);
+    UpdateBirds(birds, &player);
 }
 
 /**
@@ -307,13 +321,13 @@ void DrawGameoverScreen(void) {
         DrawPlayerSprite(&player);
     }
     
-    DrawDucks(duckies);
+    DrawDucks(duckies);  
+    DrawFullscreen(overlayTexture);   
+    DrawBirds(birds); 
     
     if (frameCount>20) {       
         DrawStyledText("- GAME OVER -", (Vector2){80, 120}, WHITE, BLACK, 1, 1);               
     }
-    
-    DrawFullscreen(overlayTexture);
     DrawEnergyBar(player);
     
 }
