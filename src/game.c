@@ -47,6 +47,24 @@ void SwitchGameScreen(int GameScreen)
             birdsAdded = 0;            
             ducksShot = 0;
             player.isAlive = ALIVE;
+            
+            int tempx = 0;
+            int tempy = 0;
+            
+            if (GetRandomValue(0,10)>5)  { 
+                tempx = GetRandomValue(30,60); 
+            } else {
+                tempx = GetRandomValue(196,226);
+            }
+            if (GetRandomValue(0,10)>5)  { 
+                tempy = GetRandomValue(50,90); 
+            } else {
+                tempy = GetRandomValue(196,226);
+            }
+            
+            NewLog(logs, tempx, tempy, 0, 0.001f);
+            
+            
             break;
         case SCREEN_GAMEPLAY:
            
@@ -209,6 +227,7 @@ void UpdateGameplayScreen(void) {
 
     UpdatePlayerSprite(&player);  
     UpdateDucks(duckies, &player, bullits);
+    UpdateLogs(logs, &player, bullits);
     UpdateShit(shit, &player);
     UpdateBirds(birds, &player);
     UpdateExplosions();
@@ -237,6 +256,7 @@ void DrawGameplayScreen(void) {
     //DrawText(TextFormat("duckies: %d", ducksAdded), 10, 130, 20, WHITE);
     
     DrawDucks(duckies);   
+    DrawLogs(logs);
     DrawPlayerSprite(&player);
     DrawBullits(bullits, sizeof(bullits));
     DrawExplosions();
@@ -322,6 +342,7 @@ void DrawGameoverScreen(void) {
     }
     
     DrawDucks(duckies);  
+    DrawLogs(logs);
     DrawFullscreen(overlayTexture);   
     DrawBirds(birds); 
     

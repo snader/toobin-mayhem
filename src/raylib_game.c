@@ -102,11 +102,16 @@ Rectangle frameRecCounter[5];
 Texture2D spriteSheetDuck;
 Rectangle frameRecDuck[4];
 
+// birds
 Texture2D spriteSheetBirdWhite;
 Rectangle frameRecBirdWhite[4];
-
 Texture2D spriteSheetBirdBlue;
 Rectangle frameRecBirdBlue[4];
+
+// log
+Texture2D spriteSheetLog;
+Rectangle frameRecLog[4];
+
 // titelscreen
 Texture2D titleTexture; 
 // explosion
@@ -147,6 +152,7 @@ char levelText[50];
 Sprite* duckies = NULL;  // Declare a pointer to Sprite
 Sprite* birds = NULL;
 Sprite* shit = NULL;
+Sprite* logs = NULL;
 Sprite player; 
 
 //----------------------------------------------------------------------------------
@@ -186,6 +192,16 @@ void DrawEnergyBar(Sprite player) {
 }
 
 
+float GetRandomFloat(float min, float max) {
+    // Genereer een willekeurige waarde tussen 0 en RAND_MAX
+    int randomInt = GetRandomValue(0, RAND_MAX);
+
+    // Schaal de waarde naar het gewenste bereik
+    float randomFloat = min + ((float)randomInt / RAND_MAX) * (max - min);
+
+    return randomFloat;
+}
+
 
 void DrawStyledText(const char* text, Vector2 position, Color textColor, Color outlineColor, int outlineThickness, int bold) {
     // Draw text with outline
@@ -199,13 +215,6 @@ void DrawStyledText(const char* text, Vector2 position, Color textColor, Color o
         DrawTextEx(konamiFont, text, (Vector2){position.x + 1, position.y}, konamiFont.baseSize, 2.0f, textColor);
     }
 }
-
-/*
-void DrawText() {
-    DrawTextEx(konamiFont, "- PRESS SPACE TO PLAY -", (Vector2){46,121}, konamiFont.baseSize, 2.0f, BLACK);
-    DrawTextEx(konamiFont, "- PRESS SPACE TO PLAY -", (Vector2){45,120}, konamiFont.baseSize, 2.0f, WHITE);
-}
-*/
 
 int calculateDistance(Vector2 point1, Vector2 point2) {
     return sqrt(pow(point2.x - point1.x, 2) + pow(point2.y - point1.y, 2));
@@ -255,6 +264,7 @@ InitAudioDevice();
     duckies = (Sprite*)malloc(100 * sizeof(Sprite));  // Assuming initial size is 50
     birds = (Sprite*)malloc(6 * sizeof(Sprite));
     shit = (Sprite*)malloc(6 * sizeof(Sprite));
+    logs = (Sprite*)malloc(8 * sizeof(Sprite));
     ripples = (Sprite*)malloc(10 * sizeof(Sprite));
     bullits = (Sprite*)malloc(50 * sizeof(Sprite));
     
@@ -270,6 +280,9 @@ InitAudioDevice();
     }
     for (int i = 1; i < nrOfBirds; i++) {
         shit[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};     
+    }
+    for (int i = 1; i < 8; i++) {
+        logs[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};     
     }
    
     player = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
@@ -340,7 +353,19 @@ InitAudioDevice();
         frameRecCounter[i].width = 5;
         frameRecCounter[i].height = 5;
     }  
-    
+    spriteSheetLog = LoadTexture("resources/log.png"); 
+    frameRecLog[0].x = 0;  // big log
+    frameRecLog[0].y = 0;
+    frameRecLog[0].width = 28;
+    frameRecLog[0].height = 19;
+    frameRecLog[1].x = 30;  // small log 1
+    frameRecLog[1].y = 5;
+    frameRecLog[1].width = 12;
+    frameRecLog[1].height = 8;
+    frameRecLog[2].x = 44;  // small log 2
+    frameRecLog[2].y = 6;
+    frameRecLog[2].width = 9;
+    frameRecLog[2].height = 7;
    
     
     // Render texture to draw full screen, enables screen scaling
@@ -371,6 +396,7 @@ InitAudioDevice();
     UnloadTexture(spriteSheetWater);
     UnloadTexture(spriteSheetRipple);
     UnloadTexture(spriteSheetDuck);
+    UnloadTexture(spriteSheetLog);
     UnloadTexture(spriteSheetBirdWhite);
     UnloadTexture(spriteSheetBirdBlue);
     UnloadTexture(explosionTexture);
@@ -406,6 +432,7 @@ InitAudioDevice();
     free(duckies);
     free(birds);
     free(shit);
+    free(logs);
        
     CloseAudioDevice();   
 

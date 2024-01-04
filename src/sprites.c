@@ -10,6 +10,7 @@ extern Texture2D spriteSheetRipple;
 extern Texture2D spriteSheetDuck;
 extern Texture2D spriteSheetBirdWhite;
 extern Texture2D spriteSheetBirdBlue;
+extern Texture2D spriteSheetLog;
 extern Texture2D spriteCounter;
 extern Texture2D explosionTexture;
 extern int frameWidthPlayer;
@@ -24,6 +25,7 @@ extern Sound ouchSfx[3];
 extern Sound popSfx;
 extern Sound ewwSfx;
 extern Rectangle frameRecPlayer[];
+extern Rectangle frameRecLog[];
 extern int DEAD;
 extern int ALIVE;
 extern int DEFAULT;
@@ -56,18 +58,22 @@ void DrawPlayerSprite(Sprite *sprite) {
     sprite->drawFrame = sprite->frame;
     if (IsKeyDown(KEY_LEFT)) {
         if (sprite->frame==1) {
-            sprite->drawFrame = 3;
+            //sprite->drawFrame = 3;
+            sprite->drawFrame = 5;
         }
         if (sprite->frame==2) {
-            sprite->drawFrame = 4;
+            //sprite->drawFrame = 4;
+            sprite->drawFrame = 6;
         }
     }
     if (IsKeyDown(KEY_RIGHT)) {
         if (sprite->frame==1) {
-            sprite->drawFrame = 5;
+            //sprite->drawFrame = 5;
+            sprite->drawFrame = 3;
         }
         if (sprite->frame==2) {
-            sprite->drawFrame = 6;
+            //sprite->drawFrame = 6;
+            sprite->drawFrame = 4;
         }
     } 
     
@@ -91,6 +97,16 @@ void DrawPlayerSprite(Sprite *sprite) {
     DrawTexturePro(
         spriteSheetPlayer,
         sourceRec,
+        (Rectangle){sprite->x+2, sprite->y+3, frameWidthPlayer, frameHeightPlayer},
+        origin,
+        sprite->degrees,
+        Fade(BLACK, 0.15f)
+    );
+
+
+    DrawTexturePro(
+        spriteSheetPlayer,
+        sourceRec,
         (Rectangle){sprite->x, sprite->y, frameWidthPlayer, frameHeightPlayer},
         origin,
         sprite->degrees,
@@ -99,7 +115,7 @@ void DrawPlayerSprite(Sprite *sprite) {
     
     //DrawText(TextFormat("Xp: %.2f", sprite->x), 10, 70, 20, WHITE);
     
-    //DrawCircleLines(sprite->x , sprite->y , 10, WHITE);
+    DrawCircleLines(sprite->x , sprite->y , 10, WHITE);
     //DrawCircleLines(sprite->x , sprite->y , 20, WHITE);
     
     //DrawCircleV((Vector2){sprite->x , sprite->y} , 2, WHITE);
@@ -264,6 +280,7 @@ void UpdatePlayerSprite(Sprite *sprite) {
     }   
     if (IsKeyPressed( KEY_LEFT_CONTROL)) {
         NewBullit(bullits, sizeof(bullits), sprite->x, sprite->y, sprite->degrees); 
+        
         sprite->speed = sprite->speed+0.1;
         sprite->frame = 7;      
         sprite->degrees = sprite->degrees+1;        
@@ -409,6 +426,14 @@ void DrawDucks(Sprite duckies[]) {
             Rectangle sourceRec = {duckies[i].drawFrame * 10, 0, 10, 10}; // 
             Vector2 origin = {10 / 2, 10 / 2}; // Set the origin to the center of the sprite                   
 
+            DrawTexturePro(
+                spriteSheetDuck,
+                sourceRec,
+                (Rectangle){duckies[i].x+1, duckies[i].y+2, 10, 10},
+                origin,
+                0,
+                Fade(BLACK, 0.15f)
+            );  
             DrawTexturePro(
                 spriteSheetDuck,
                 sourceRec,
@@ -665,6 +690,34 @@ void NewDuck(Sprite duckies[]) {
     }
 }
 
+
+void NewLog(Sprite logs[], int x, int y, int size, float speed) {
+    
+    int randomnr;
+    for (int i = 1; i < 8; i++) {
+           
+        randomnr = GetRandomValue(1,3);
+        if (logs[i].isAlive == DEAD) {
+            if (size==0) {
+                logs[i].frame = 0; 
+            } else {
+                logs[i].frame = GetRandomValue(1,2);
+            }
+            logs[i].isAlive = ALIVE;
+            logs[i].x = x;
+            logs[i].y = y;
+            logs[i].degrees = GetRandomValue(0,360);
+            logs[i].speed = speed; //GetRandomFloat(-0.005f, 0.005f);
+            //if (randomnr == 1) { logs[i].degrees=90; }
+            //if (randomnr == 2) { logs[i].degrees=180; }
+            //if (randomnr == 3) { logs[i].degrees=270; }
+            
+            break;
+        }
+    }
+    
+}
+
 /*
 *
 */
@@ -800,6 +853,94 @@ void UpdateShit(Sprite shit[], Sprite *player) {
     
 }
 
+void UpdateLogs(Sprite logs[], Sprite *player, Sprite bullits[]) {
+    for (int i = 1; i < 8; i++) {
+                
+        if (logs[i].isAlive == ALIVE) {
+            
+            if (logs[i].speed>0) {
+                logs[i].speed = logs[i].speed - 0.001f;
+            }
+            
+           
+                        
+            Vector2 circleCenter = {player->x, player->y};             
+         
+            // collision with player
+            //if (CheckCollisionCircleRec(circleCenter, 18, frameRecLog[logs[i].frame])) {
+            if (CheckCollisionCircles((Vector2){logs[i].x, logs[i].y}, frameRecLog[logs[i].frame].height/2, (Vector2){player->x, player->y}, 10)) {
+                player->energy = player->energy-10;
+            }
+            
+            if (CheckCollisionCircles((Vector2){logs[i].x, logs[i].y}, frameRecLog[logs[i].frame].height/2, (Vector2){player->x, player->y}, 8)) {
+                                          
+                /*                          
+                if (IsKeyDown(KEY_UP)) {
+                    logs[i].degrees = player->degrees + GetRandomValue(-15,15);
+                } else if (IsKeyDown(KEY_DOWN)) {
+                    logs[i].degrees = -player->degrees + GetRandomValue(-15,15);
+                }
+                          
+                                         
+                logs[i].speed = player->speed/2;// /3.0f;
+                //if (logs[i].speed<0.5f) { logs[i].speed = 0.5f; }
+                player->speed = -(player->speed/2); ///3.0f);
+                
+                if (player->speed < 0.3f) {
+                    //logs[i].speed = 0.3f;
+                } 
+                */
+                
+                //SwitchGameScreen(SCREEN_GAMEOVER);
+                player->energy = -10; 
+               
+                
+            }
+            
+            // collision with bullits                   
+            for (int b = 0; b < 50; b++) {
+                    
+                if (bullits[b].isAlive == ALIVE) {
+                    if (CheckCollisionPointCircle((Vector2){bullits[b].x, bullits[b].y}, (Vector2){logs[i].x, logs[i].y}, frameRecLog[logs[i].frame].height/2)) {
+                        logs[i].isAlive = DEAD;
+                        bullits[b].isAlive = DEAD;
+                        
+                        
+                        
+                        if (logs[i].frame==0) {
+                            score = score + 5;
+                            NewLog(logs, logs[i].x-5, logs[i].y-5, 1, 0.1f);
+                            NewLog(logs, logs[i].x+5, logs[i].y+5, 2, 0.1f);
+                        } else {
+                            score = score + 10;
+                        }
+                        
+                        
+                        //PlaySound(quackSfx[GetRandomValue(1,3)]);
+                    }   
+                }
+                    
+                    
+            }
+            
+                     
+             // move the log
+            logs[i].x += logs[i].speed * sin(logs[i].degrees * DEG2RAD);
+            logs[i].y += logs[i].speed * -cos(logs[i].degrees * DEG2RAD);   
+            
+            
+            if (logs[i].x > 286 || logs[i].x < -20 || logs[i].y<-20 || logs[i].y>286) {
+                logs[i].isAlive = DEAD;
+            }     
+            
+        }  
+
+               
+        
+    }
+    
+}
+
 void UpdateBirds(Sprite birds[], Sprite *player) {
     
     int soundnr;
@@ -926,8 +1067,48 @@ void DrawShit(Sprite shit[]) {
                        
         if (shit[i].isAlive == ALIVE) {
             myCount++;
-           DrawCircle(shit[i].x , shit[i].y , 1, WHITE);
+           DrawCircle(shit[i].x , shit[i].y , 1, LIGHTGRAY);
           
+            
+        }
+        
+        
+    }
+    //DrawText(TextFormat("shit: %d", myCount), 10, 150, 20, WHITE);
+}
+
+
+
+void DrawLogs(Sprite logs[]) {
+    
+    int myCount = 0;
+    for (int i = 1; i < 8; i++) {                                 
+                       
+        if (logs[i].isAlive == ALIVE) {
+            myCount++;
+           
+            
+            Vector2 origin = {frameRecLog[logs[i].frame].width / 2, frameRecLog[logs[i].frame].height / 2}; // Set the origin to the center of the sprite  
+
+            DrawTexturePro(
+                spriteSheetLog, 
+                frameRecLog[logs[i].frame], 
+                (Rectangle){logs[i].x+1, logs[i].y+2, frameRecLog[logs[i].frame].width, frameRecLog[logs[i].frame].height},
+                origin,
+                0, 
+                Fade(BLACK, 0.15f)
+            ); 
+            DrawTexturePro(
+                spriteSheetLog, 
+                frameRecLog[logs[i].frame], 
+                (Rectangle){logs[i].x, logs[i].y, frameRecLog[logs[i].frame].width, frameRecLog[logs[i].frame].height},
+                origin,
+                0, 
+                WHITE);
+           
+           DrawCircleLines(logs[i].x , logs[i].y , frameRecLog[logs[i].frame].height/2, WHITE);
+          
+            DrawText(TextFormat("speed: %.2f", logs[i].speed), 10, 50, 20, WHITE);  
             
         }
         
