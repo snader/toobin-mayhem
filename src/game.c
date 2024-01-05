@@ -16,17 +16,24 @@ void SwitchGameScreen(int GameScreen)
         case SCREEN_TITLE:
         
             level = 1;
-        
+            score = 0;
+            newHighscore = false;
             player.frame = 0;
             player.speed = 0.4f;
-            player.degrees = GetRandomValue(-10,10);
+            player.degrees = GetRandomValue(-20,20);
             player.x = screenWidth / 2;
-            player.y = (screenHeight / 2) + 50;
+            player.y = (screenHeight / 2) + 30;
             player.isAlive = ALIVE;
             player.energy = 100.0f;    
 
             for (int i = 1; i < nrOfDucks; i++) {   
                 duckies[i].isAlive = DEAD;
+            }  
+            for (int i = 1; i < nrOfBirds; i++) {   
+                birds[i].isAlive = DEAD;
+            } 
+            for (int i = 1; i < 8; i++) {   
+                logs[i].isAlive = DEAD;
             }            
         
             break;
@@ -43,34 +50,53 @@ void SwitchGameScreen(int GameScreen)
             if (player.energy>100) {
                 player.energy = 100.0f;
             }
+            player.speed = 0.4f;
+            player.degrees = GetRandomValue(-20,20);
+            player.x = screenWidth / 2;
+            player.y = (screenHeight / 2) + 30;
+            
             ducksAdded = 0;      
             birdsAdded = 0;            
             ducksShot = 0;
             player.isAlive = ALIVE;
             
-            int tempx = 0;
-            int tempy = 0;
-            
-            if (GetRandomValue(0,10)>5)  { 
-                tempx = GetRandomValue(30,60); 
-            } else {
-                tempx = GetRandomValue(196,226);
+            // onder default
+            int tempx = GetRandomValue(30,226); 
+            int tempy = GetRandomValue(180,226); ;
+            int randnr = GetRandomValue(1,20);
+            if (randnr<=5)  { 
+                // links
+                tempx = GetRandomValue(30,80); 
+                tempy = GetRandomValue(50,226); 
+            } 
+            if (randnr>5 && randnr<=10)  { 
+                // rechts
+                tempx = GetRandomValue(180,226); 
+                tempy = GetRandomValue(50,226); 
+            } 
+            if (randnr>10 && randnr<=15)  { 
+                // boven
+                tempx = GetRandomValue(30,226); 
+                tempy = GetRandomValue(50,80); 
             }
-            if (GetRandomValue(0,10)>5)  { 
-                tempy = GetRandomValue(50,90); 
-            } else {
-                tempy = GetRandomValue(196,226);
+              
+            if (level>0) {
+                NewLog(logs, tempx, tempy, 0, 0.2f, GetRandomValue(0,360));
             }
             
-            NewLog(logs, tempx, tempy, 0, 0.001f);
             
             
             break;
         case SCREEN_GAMEPLAY:
-           
+            
             break;
         case SCREEN_GAMEOVER:
-            
+            score = score + (level*10);
+            PlaySound(gameOverSfx);
+            if (score > highscore) {
+                highscore = score;
+                newHighscore = true;
+            }
             
             break;    
         case SCREEN_ENDING:
@@ -86,6 +112,12 @@ void SwitchGameScreen(int GameScreen)
 // Update and draw frame
 void UpdateDrawFrame(void)
 {
+    UpdateMusicStream(music);   // Update music buffer with new stream data
+    
+    // Get normalized time played for current music stream
+        timePlayed = GetMusicTimePlayed(music)/GetMusicTimeLength(music);
+
+      if (timePlayed > 1.0f) timePlayed = 1.0f;   // Make sure time played is no longer than music
     // Update
      // main frameCount
       frameCount++;
@@ -116,7 +148,7 @@ void UpdateDrawFrame(void)
                 SwitchGameScreen(SCREEN_LEVEL);            
                 break;
             case SCREEN_LEVEL:
-                SwitchGameScreen(SCREEN_GAMEPLAY);                
+                //SwitchGameScreen(SCREEN_GAMEPLAY);                
                 break;
             case SCREEN_GAMEPLAY:
                 
@@ -158,6 +190,7 @@ void UpdateDrawFrame(void)
                 break;            
             case SCREEN_GAMEPLAY:
                 if (IsKeyPressed(KEY_Q) || player.energy <= 0) {
+                   
                     SwitchGameScreen(SCREEN_GAMEOVER);
                     player.energy = -10; // in case of Q
                 }
@@ -226,7 +259,7 @@ void UpdateGameplayScreen(void) {
     }     
 
     UpdatePlayerSprite(&player);  
-    UpdateDucks(duckies, &player, bullits);
+    UpdateDucks(duckies, &player, bullits, logs);
     UpdateLogs(logs, &player, bullits);
     UpdateShit(shit, &player);
     UpdateBirds(birds, &player);
@@ -271,23 +304,30 @@ void DrawGameplayScreen(void) {
 
 void DrawLevelScreen() {
     
-    tmpCount++;
-    if (tmpCount>160) {
+    if (tmpCount == 0) {
+        PlaySound(levelSfx);
+    }
+    tmpCount=tmpCount+2;
+    if (tmpCount>256) {
         currentScreen = SCREEN_GAMEPLAY;
         tmpCount=0;
     }
     
+     DrawRectangle(0, 0, screenWidth, screenHeight, (Color){0, 0, 0, (256-tmpCount)});
 
-    // Convert the integer to a string using sprintf
-    sprintf(levelText, "- LEVEL %d -", level);
-    float x = screenWidth/2.0f - MeasureTextEx(konamiFont, levelText, konamiFont.baseSize, 2).x/2.0f; 
-    DrawStyledText(levelText, (Vector2){x, 120}, WHITE, BLACK, 1, 1); 
+    if (tmpCount>25) {
+        // Convert the integer to a string using sprintf
+        sprintf(levelText, "- LEVEL %d -", level);
+        float x = screenWidth/2.0f - MeasureTextEx(konamiFont, levelText, konamiFont.baseSize, 2).x/2.0f; 
+        DrawStyledText(levelText, (Vector2){x, 120}, WHITE, BLACK, 1, 1); 
+        
+        sprintf(levelText, "Shoot %d rubber duckies", levelDuckCount[level]);
+        x = screenWidth/2.0f - MeasureTextEx(konamiFont, levelText, konamiFont.baseSize, 2).x/2.0f; 
+        DrawStyledText(levelText, (Vector2){x, 135}, WHITE, BLACK, 1, 1); 
+    }
+    //DrawFullscreen(overlayTexture);    
+   
     
-    sprintf(levelText, "Shoot %d rubber duckies", levelDuckCount[level]);
-    x = screenWidth/2.0f - MeasureTextEx(konamiFont, levelText, konamiFont.baseSize, 2).x/2.0f; 
-    DrawStyledText(levelText, (Vector2){x, 135}, WHITE, BLACK, 1, 1); 
-    
-    DrawFullscreen(overlayTexture);                
     DrawEnergyBar(player);
 }
 
@@ -319,7 +359,7 @@ void UpdateGameoverScreen(void) {
         }     
     }
     //UpdatePlayerSprite(&player);   
-    UpdateDucks(duckies, &player, bullits);
+    UpdateDucks(duckies, &player, bullits, logs);
     UpdateShit(shit, &player);
     UpdateBirds(birds, &player);
 }
@@ -347,8 +387,14 @@ void DrawGameoverScreen(void) {
     DrawBirds(birds); 
     
     if (frameCount>20) {       
-        DrawStyledText("- GAME OVER -", (Vector2){80, 120}, WHITE, BLACK, 1, 1);               
+        DrawStyledText("- GAME OVER -", (Vector2){80, 120}, WHITE, BLACK, 1, 1);     
+
+        
     }
+    if (newHighscore) {
+            DrawStyledText("- NEW HIGHSCORE -", (Vector2){66, 140}, RED, BLACK, 1, 1);
+            
+        }
     DrawEnergyBar(player);
     
 }
@@ -357,16 +403,53 @@ void DrawGameoverScreen(void) {
 // Define update functions for each screen
 void DrawLogoScreen(void) {
     // Update logic for the logo screen...
-    DrawText("Logo", 10, 10, 20, RED);
+    Rectangle sourceRec = { 0, 0, raylibTexture.width, raylibTexture.height };
+    Rectangle destRec = {10, 10, raylibTexture.width, raylibTexture.height };
+    Vector2 origin = { 0, 0 }; // No rotation, use top-left corner as origin
+    DrawTexturePro(raylibTexture, sourceRec, destRec, origin, 0.0f, WHITE);
+    
+    
+    DrawTexturePro(toobinTexture, (Rectangle){ 0, 0, toobinTexture.width, toobinTexture.height }, (Rectangle){83, 80, toobinTexture.width, toobinTexture.height }, (Vector2){ 0, 0 }, 0.0f, WHITE);
+    
+    
+    
+    DrawText("A game by", 75, 120, 20, BLACK);
+    DrawText("Sander Voorn", 55, 150, 20, RED);
+    
+    DrawStyledText("- UP/DOWN = FORWARD/BACKWARD -", (Vector2){15, 180}, BLACK, WHITE, 1, 0); 
+    DrawStyledText("- LEFT/RIGHT = TURN -", (Vector2){52, 195}, BLACK, WHITE, 1,0);
+    DrawStyledText("- CTRL = SHOOT -", (Vector2){70, 210}, BLACK, WHITE, 1, 0);
+    
+    if (frameCount>20) {       
+        DrawStyledText("- PRESS SPACE TO CONTINUE -", (Vector2){30, 230}, RED, WHITE, 1, 0);               
+    }
+    
+    // duckies
+    Rectangle sourceRecd = {0, 0, 10, 10}; // 
+    Vector2 origind = {0,0}; // Set the origin to the center of the sprite     
+   
+            DrawTexturePro(
+                spriteSheetDuck,
+                sourceRecd,
+                (Rectangle){90, 13, 10, 10},
+                origind,
+                0,
+                WHITE
+            );    
 }
 
 void DrawTitleScreen(void) {
     // Update logic for the title screen...
     DrawFullscreen(titleTexture);
     
-
     if (frameCount>20) {       
         DrawStyledText("- PRESS SPACE TO PLAY -", (Vector2){45, 120}, WHITE, BLACK, 1, 1);               
+    }
+    
+    int soundnr = GetRandomValue(1,3);
+    if (GetRandomValue(0,100)>70 && frameCount==50 && !IsSoundPlaying(seagullSfx[soundnr])) {
+       
+        PlaySound(seagullSfx[soundnr]);
     }
 }
 

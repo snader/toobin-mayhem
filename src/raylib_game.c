@@ -81,6 +81,8 @@ int ducksAdded = 0;
 int birdsAdded = 0;
 
 int score = 0;
+int highscore = 0;
+bool newHighscore = false;
 char formattedScore[5];
 
 // Player sprite
@@ -116,10 +118,12 @@ Rectangle frameRecLog[4];
 Texture2D titleTexture; 
 // explosion
 Texture2D explosionTexture;
+Texture2D toobinTexture;
 
 // overlay
 Texture2D overlayTexture; 
 
+Texture2D raylibTexture;
 
 int waterFrame = 0;
 int popperSoundNr = 0;
@@ -142,11 +146,17 @@ Sound fartSfx[4];
 Sound explodingTubeSfx;
 Sound popSfx;
 Sound ewwSfx;
+Sound woodSfx;
 Sound inflateSfx;
+Sound levelSfx;
+Sound gameOverSfx;
+
+Music music;
 
 Font konamiFont;
 int tmpCount = 0;
 char levelText[50];
+float timePlayed = 0.0f;        // Time played normalized [0.0f..1.0f]
 
 // Array of enemies
 Sprite* duckies = NULL;  // Declare a pointer to Sprite
@@ -178,14 +188,39 @@ void DrawEnergyBar(Sprite player) {
     // Draw white border
     DrawRectangleLinesEx((Rectangle){x, y, width, height}, 1, WHITE);
     
+    // energy
     DrawStyledText("TUBE AIR", (Vector2){10, y}, WHITE, BLACK, 1, 1);   
     
-    sprintf(levelText, "DUCKS SHOT %d", ducksShot);
-    DrawStyledText(levelText, (Vector2){155, y}, WHITE, BLACK, 1, 1);   
+    // duckies
+    Rectangle sourceRec = {0, 0, 10, 10}; // 
+    Vector2 origin = {0,0}; // Set the origin to the center of the sprite     
+    DrawTexturePro(
+                spriteSheetDuck,
+                sourceRec,
+                (Rectangle){81, y+12, 10, 10},
+                origin,
+                0,
+                BLACK
+            );  
+            DrawTexturePro(
+                spriteSheetDuck,
+                sourceRec,
+                (Rectangle){80, y+11, 10, 10},
+                origin,
+                0,
+                WHITE
+            );    
+    sprintf(levelText, "SHOT %d/%d", ducksShot, levelDuckCount[level]);
+    DrawStyledText(levelText, (Vector2){95, y+12}, WHITE, BLACK, 1, 1);   
+    
+    int textWidth = 0;
+    sprintf(levelText, "HIGH %04d", highscore);
+    textWidth = MeasureText(levelText, konamiFont.baseSize);
+    DrawStyledText(levelText, (Vector2){screenWidth - textWidth - 20, y}, WHITE, BLACK, 1 ,1);  
     
     sprintf(levelText, "SCORE %04d", score);
-    //sprintf(levelText, "SCORE %d", score);
-    DrawStyledText(levelText, (Vector2){155, y+12}, WHITE, BLACK, 1 ,1);  
+    textWidth = MeasureText(levelText, konamiFont.baseSize);
+    DrawStyledText(levelText, (Vector2){screenWidth - textWidth - 21, y+12}, WHITE, BLACK, 1 ,1);  
     
     sprintf(levelText, "LEVEL %02d", level);
     DrawStyledText(levelText, (Vector2){10, y+12}, WHITE, BLACK, 1 ,1);  
@@ -220,6 +255,8 @@ int calculateDistance(Vector2 point1, Vector2 point2) {
     return sqrt(pow(point2.x - point1.x, 2) + pow(point2.y - point1.y, 2));
 }
 
+
+
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
@@ -243,6 +280,8 @@ InitAudioDevice();
     seagullSfx[1] = LoadSound("resources/seagull1.wav");
     seagullSfx[2] = LoadSound("resources/seagull2.wav");
     seagullSfx[3] = LoadSound("resources/seagull3.wav");
+    levelSfx = LoadSound("resources/level.wav");
+    gameOverSfx = LoadSound("resources/gameover.wav");
     
     fartSfx[1] = LoadSound("resources/fart1.wav");
     fartSfx[2] = LoadSound("resources/fart2.wav");
@@ -252,6 +291,7 @@ InitAudioDevice();
     ouchSfx[2] = LoadSound("resources/ouch2.wav");
     popSfx = LoadSound("resources/pop.wav");
     ewwSfx = LoadSound("resources/eww.wav");
+    woodSfx = LoadSound("resources/wood.wav");
     //scratchSfx[1] = LoadSound("resources/scratch1.wav");
     scratchSfx[2] = LoadSound("resources/scratch2.wav");
     inflateSfx = LoadSound("resources/inflate.wav");
@@ -301,8 +341,13 @@ InitAudioDevice();
     konamiFont = LoadFont("resources/font.png");
     
     titleTexture = LoadTexture("resources/title.png");
+    toobinTexture = LoadTexture("resources/toobin.png");
     overlayTexture = LoadTexture("resources/boardwalk.png");
+    raylibTexture = LoadTexture("resources/raylib.png");
     explosionTexture = LoadTexture("resources/explosion.png");
+    
+     // Load MP3 audio file
+    music = LoadMusicStream("resources/lake.mp3");
     
     spriteSheetPlayer = LoadTexture("resources/player2.png"); 
     for (int i = 0; i < frameCountPlayer; i++) {
@@ -373,10 +418,16 @@ InitAudioDevice();
     target = LoadRenderTexture(screenWidth, screenHeight);
     SetTextureFilter(target.texture, TEXTURE_FILTER_BILINEAR); //  TEXTURE_FILTER_BILINEAR
     
+    // Play the music
+    PlayMusicStream(music);
 
 #if defined(PLATFORM_WEB)
     emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
 #else
+    
+
+    
+
     SetTargetFPS(60);     // Set our game frames-per-second
     //--------------------------------------------------------------------------------------
 
@@ -402,6 +453,7 @@ InitAudioDevice();
     UnloadTexture(explosionTexture);
     UnloadTexture(titleTexture);
     UnloadTexture(overlayTexture);
+    UnloadMusicStream(music);
     
     UnloadSound(splashSfxR);
     UnloadSound(splashSfxL);
@@ -417,7 +469,8 @@ InitAudioDevice();
     UnloadSound(fartSfx[1]);
     UnloadSound(fartSfx[2]);
     UnloadSound(fartSfx[3]);
-    //UnloadSound(scratchSfx[1]);
+    UnloadSound(levelSfx);
+    UnloadSound(gameOverSfx);
     UnloadSound(scratchSfx[2]);
     UnloadSound(ewwSfx);
     
@@ -426,6 +479,7 @@ InitAudioDevice();
     UnloadSound(ouchSfx[2]);
     UnloadSound(popSfx);
     UnloadSound(inflateSfx);
+    UnloadSound(woodSfx);
     
     free(ripples);
     free(bullits);

@@ -115,7 +115,7 @@ void DrawPlayerSprite(Sprite *sprite) {
     
     //DrawText(TextFormat("Xp: %.2f", sprite->x), 10, 70, 20, WHITE);
     
-    DrawCircleLines(sprite->x , sprite->y , 10, WHITE);
+    //DrawCircleLines(sprite->x , sprite->y , 10, WHITE);
     //DrawCircleLines(sprite->x , sprite->y , 20, WHITE);
     
     //DrawCircleV((Vector2){sprite->x , sprite->y} , 2, WHITE);
@@ -151,17 +151,14 @@ void DrawPlayerSprite(Sprite *sprite) {
 * UpdatePlayerSprite
 */
 void UpdatePlayerSprite(Sprite *sprite) {
-    
-        
+            
     sprite->frameDelay++;
     
     if ((IsKeyDown(KEY_UP) || IsKeyDown(KEY_DOWN)) && !IsKeyDown(KEY_LEFT_CONTROL)) {
-        
-        
+                
         if (sprite->frameDelay>10) {
             if (IsKeyDown(KEY_UP)) {
-                sprite->frame--;
-                
+                sprite->frame--;                
             } else if (IsKeyDown(KEY_DOWN)) {
                 sprite->frame++;
             }
@@ -172,7 +169,7 @@ void UpdatePlayerSprite(Sprite *sprite) {
                 
                 if (sprite->frame == 1) {                
                     PlaySound(splashSfxL);      
-                    sprite->energy -= 0.1f;
+                    sprite->energy -= (0.05f + (level/10.0f));
                 } 
                 
             }
@@ -284,6 +281,10 @@ void UpdatePlayerSprite(Sprite *sprite) {
         sprite->speed = sprite->speed+0.1;
         sprite->frame = 7;      
         sprite->degrees = sprite->degrees+1;        
+    }
+    
+    if (frameCount==59) {
+        sprite->energy -= 0.1f;
     }
     
 }
@@ -492,7 +493,7 @@ int DucksAlive() {
         
 }
 
-void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
+void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[], Sprite logs[]) {
     for (int i = 1; i < nrOfDucks; i++) {
                 
         if (duckies[i].isAlive == ALIVE) {
@@ -514,6 +515,9 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
                     
                     if (duckies[i].state == EXPLODING) {
                         duckies[i].counter--;
+                        if (duckies[i].counter==0) {
+                            PlaySound(quackSfx[GetRandomValue(1,3)]);
+                        }
                         if (duckies[i].counter<0) {
                             duckies[i].isAlive = DEAD;
                             
@@ -604,6 +608,34 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
                 }
             }
             
+            bool reverse = false;
+            // duck collision with logs
+            for (int i = 1; i < 8; i++) {
+                
+                if (logs[i].isAlive == ALIVE) {
+                    if (CheckCollisionCircles((Vector2){logs[i].x, logs[i].y}, frameRecLog[logs[i].frame].height/2, (Vector2){duckies[i].x, duckies[i].y}, 8)) {
+                        duckies[i].degrees += 180.0f + GetRandomFloat(-10.0f, 10.0f);
+                        if (duckies[i].degrees >= 360.0f) {
+                           duckies[i].degrees -= 360.0f;
+                        }
+                        reverse = true;
+                    }
+                }
+            }
+            
+            // reverse
+            if (!reverse) {
+                if (
+                (duckies[i].secondsAlive > 5 && GetRandomValue(0,100) < 5) && ( (duckies[i].x < GetRandomValue(5,15) || duckies[i].x > GetRandomValue(240,256) || 
+                    duckies[i].y < GetRandomValue(5,15) || duckies[i].y > GetRandomValue(240,256) ) )
+                    ) {
+                        duckies[i].degrees += 180.0f + GetRandomFloat(-10.0f, 10.0f);
+                        if (duckies[i].degrees >= 360.0f) {
+                           duckies[i].degrees -= 360.0f;
+                        }
+                }
+            }
+            
             // move the duckies
             duckies[i].x += duckies[i].speed * sin(duckies[i].degrees * DEG2RAD);
             duckies[i].y += duckies[i].speed * -cos(duckies[i].degrees * DEG2RAD);   
@@ -612,16 +644,8 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[]) {
                 duckies[i].speed -= 0.05;
             }
             
-            // reverse
-            if (
-            (duckies[i].secondsAlive > 5 && GetRandomValue(0,100) < 5) && ( (duckies[i].x < GetRandomValue(5,15) || duckies[i].x > GetRandomValue(240,256) || 
-                duckies[i].y < GetRandomValue(5,15) || duckies[i].y > GetRandomValue(240,256) ) )
-                ) {
-                    duckies[i].degrees += 180.0f;
-                    if (duckies[i].degrees >= 360.0f) {
-                       duckies[i].degrees -= 360.0f;
-                    }
-            }
+           
+            
             
         }
         
@@ -691,12 +715,12 @@ void NewDuck(Sprite duckies[]) {
 }
 
 
-void NewLog(Sprite logs[], int x, int y, int size, float speed) {
+void NewLog(Sprite logs[], int x, int y, int size, float speed, float degrees) {
     
-    int randomnr;
+
     for (int i = 1; i < 8; i++) {
            
-        randomnr = GetRandomValue(1,3);
+
         if (logs[i].isAlive == DEAD) {
             if (size==0) {
                 logs[i].frame = 0; 
@@ -706,7 +730,7 @@ void NewLog(Sprite logs[], int x, int y, int size, float speed) {
             logs[i].isAlive = ALIVE;
             logs[i].x = x;
             logs[i].y = y;
-            logs[i].degrees = GetRandomValue(0,360);
+            logs[i].degrees = degrees;
             logs[i].speed = speed; //GetRandomFloat(-0.005f, 0.005f);
             //if (randomnr == 1) { logs[i].degrees=90; }
             //if (randomnr == 2) { logs[i].degrees=180; }
@@ -861,40 +885,18 @@ void UpdateLogs(Sprite logs[], Sprite *player, Sprite bullits[]) {
             if (logs[i].speed>0) {
                 logs[i].speed = logs[i].speed - 0.001f;
             }
-            
-           
-                        
-            Vector2 circleCenter = {player->x, player->y};             
+                                              
+                
          
             // collision with player
-            //if (CheckCollisionCircleRec(circleCenter, 18, frameRecLog[logs[i].frame])) {
             if (CheckCollisionCircles((Vector2){logs[i].x, logs[i].y}, frameRecLog[logs[i].frame].height/2, (Vector2){player->x, player->y}, 10)) {
                 player->energy = player->energy-10;
             }
             
             if (CheckCollisionCircles((Vector2){logs[i].x, logs[i].y}, frameRecLog[logs[i].frame].height/2, (Vector2){player->x, player->y}, 8)) {
-                                          
-                /*                          
-                if (IsKeyDown(KEY_UP)) {
-                    logs[i].degrees = player->degrees + GetRandomValue(-15,15);
-                } else if (IsKeyDown(KEY_DOWN)) {
-                    logs[i].degrees = -player->degrees + GetRandomValue(-15,15);
-                }
-                          
-                                         
-                logs[i].speed = player->speed/2;// /3.0f;
-                //if (logs[i].speed<0.5f) { logs[i].speed = 0.5f; }
-                player->speed = -(player->speed/2); ///3.0f);
-                
-                if (player->speed < 0.3f) {
-                    //logs[i].speed = 0.3f;
-                } 
-                */
-                
-                //SwitchGameScreen(SCREEN_GAMEOVER);
+                                                        
                 player->energy = -10; 
-               
-                
+                               
             }
             
             // collision with bullits                   
@@ -905,18 +907,43 @@ void UpdateLogs(Sprite logs[], Sprite *player, Sprite bullits[]) {
                         logs[i].isAlive = DEAD;
                         bullits[b].isAlive = DEAD;
                         
-                        
-                        
                         if (logs[i].frame==0) {
+                            
+                            float angle = atan2f(bullits[b].y - logs[i].y, bullits[b].x - logs[i].x);
+                            // Calculate the new velocities after the collision // obj1 = log
+                        
+                            float obj2NewSpeed = bullits[b].speed / 10;
+
+                                                        
+                            float overlap = 2 * 2 - calculateDistance((Vector2){logs[i].x, bullits[b].y}, (Vector2){logs[i].x, bullits[b].y});
+                            
+                            int log1x = logs[i].x;
+                            int log1y = logs[i].y;
+                            int log2x = bullits[b].x;
+                            int log2y = bullits[b].y;
+                                                        
+                            log1x -= cos(angle) * overlap / 2;
+                            log1y -= sin(angle) * overlap / 2;
+                            log2x += cos(angle) * overlap / 2;
+                            log2y += sin(angle) * overlap / 2;
+
+                            // Update the angles based on the new velocities
+                            float log1degrees = atan2f(sin(logs[i].degrees * DEG2RAD - angle), cos(logs[i].degrees * DEG2RAD - angle)) * RAD2DEG;
+                            float log2degrees = atan2f(sin(bullits[b].degrees * DEG2RAD - angle), cos(bullits[b].degrees * DEG2RAD - angle)) * RAD2DEG;
+                            
                             score = score + 5;
-                            NewLog(logs, logs[i].x-5, logs[i].y-5, 1, 0.1f);
-                            NewLog(logs, logs[i].x+5, logs[i].y+5, 2, 0.1f);
+                            NewLog(logs, log1x, log1y, 1, obj2NewSpeed, log1degrees);
+                            NewLog(logs, log2x, log2y, 2, obj2NewSpeed, log2degrees);
+                            
+                            
+                            
                         } else {
                             score = score + 10;
                         }
                         
-                        
-                        //PlaySound(quackSfx[GetRandomValue(1,3)]);
+                        Vector2 explosionPosition = {logs[i].x, logs[i].y};  
+                        InitializeExplosion(explosionPosition);   
+                        PlaySound(woodSfx);
                     }   
                 }
                     
@@ -1067,7 +1094,7 @@ void DrawShit(Sprite shit[]) {
                        
         if (shit[i].isAlive == ALIVE) {
             myCount++;
-           DrawCircle(shit[i].x , shit[i].y , 1, LIGHTGRAY);
+            DrawCircle(shit[i].x , shit[i].y , 1, LIGHTGRAY);
           
             
         }
@@ -1106,9 +1133,9 @@ void DrawLogs(Sprite logs[]) {
                 0, 
                 WHITE);
            
-           DrawCircleLines(logs[i].x , logs[i].y , frameRecLog[logs[i].frame].height/2, WHITE);
+           //DrawCircleLines(logs[i].x , logs[i].y , frameRecLog[logs[i].frame].height/2, WHITE);
           
-            DrawText(TextFormat("speed: %.2f", logs[i].speed), 10, 50, 20, WHITE);  
+            //DrawText(TextFormat("speed: %.2f", logs[i].speed), 10, 50, 20, WHITE);  
             
         }
         
