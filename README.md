@@ -28,7 +28,8 @@ Keyboard:
 
 ### Screenshots
 
-_TODO: Show your game to the world, animated GIFs recommended!._
+![Toobin' Mayhem](screenshots/screenshot000.png "$(Toobin' Mayhem)")
+![Toobin' Mayhem](screenshots/screenshot001.png "$(Toobin' Mayhem)")
 
 ### Developers
 
