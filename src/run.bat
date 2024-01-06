@@ -1,2 +1,2 @@
-emrun raylib_game.html
+emrun index.html
 

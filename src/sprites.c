@@ -290,6 +290,36 @@ void UpdatePlayerSprite(Sprite *sprite) {
 }
 
 /**
+* DrawScores
+*/
+void DrawScores(Sprite points[]) {
+    
+   
+    for (int i = 0; i < 25; i++) {                                 
+                       
+        if (points[i].isAlive == ALIVE) {        
+           
+           if (points[i].counter<0) {
+               DrawTextEx(konamiFont, TextFormat("%d", points[i].counter), (Vector2){points[i].x, points[i].y}, points[i].frame, 2.0f, RED);
+           } else {
+               DrawTextEx(konamiFont, TextFormat("%d", points[i].counter), (Vector2){points[i].x, points[i].y}, points[i].frame, 2.0f, WHITE);
+           }
+           
+           points[i].frame += 1.5f;
+           points[i].y -= 1.0f;    
+           points[i].x -= 0.3f;
+                    
+        }
+        
+        if (points[i].frame > 25) {
+            points[i].isAlive = DEAD;
+        } 
+        
+    }
+    
+}
+
+/**
 * DrawBullits
 */
 void DrawBullits(Sprite bullits[], size_t size) {
@@ -347,6 +377,29 @@ void NewBullit(Sprite bullits[], size_t size, int x, int y, int degrees) {
     }
 }
 
+/*
+*
+*/
+void NewScores(Sprite points[], int x, int y, int score) {
+    
+  
+    for (int i = 0; i < 25; i++) {
+        // reuse dead score       
+
+        if (points[i].isAlive == DEAD) {                               
+            
+            points[i].isAlive = ALIVE;
+            points[i].x = x;
+            points[i].y = y;
+            points[i].frame = 1;
+            points[i].counter = score;
+                      
+            break;
+        }
+        
+        
+    }
+}
 
 /**
 *
@@ -493,7 +546,7 @@ int DucksAlive() {
         
 }
 
-void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[], Sprite logs[]) {
+void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[], Sprite logs[], Sprite points[]) {
     for (int i = 1; i < nrOfDucks; i++) {
                 
         if (duckies[i].isAlive == ALIVE) {
@@ -524,6 +577,7 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[], Sprite logs
                             // not counting for amount shot total
                             ducksAdded--;
                             score-=2;
+                            NewScores(points, duckies[i].x, duckies[i].y - 10, -2);
                             if (score<0) {
                                 score = 0;
                             }
@@ -598,6 +652,7 @@ void UpdateDucks(Sprite duckies[], Sprite *player, Sprite bullits[], Sprite logs
                             bullits[b].isAlive = DEAD;
                             ducksShot++;
                             score = score + 10;
+                            NewScores(points, duckies[i].x, duckies[i].y - 10, 10);
                             Vector2 explosionPosition = {bullits[b].x, bullits[b].y};  
                             InitializeExplosion(explosionPosition);  
                             PlaySound(quackSfx[GetRandomValue(1,3)]);
@@ -877,7 +932,7 @@ void UpdateShit(Sprite shit[], Sprite *player) {
     
 }
 
-void UpdateLogs(Sprite logs[], Sprite *player, Sprite bullits[]) {
+void UpdateLogs(Sprite logs[], Sprite *player, Sprite bullits[], Sprite points[]) {
     for (int i = 1; i < 8; i++) {
                 
         if (logs[i].isAlive == ALIVE) {
@@ -932,6 +987,7 @@ void UpdateLogs(Sprite logs[], Sprite *player, Sprite bullits[]) {
                             float log2degrees = atan2f(sin(bullits[b].degrees * DEG2RAD - angle), cos(bullits[b].degrees * DEG2RAD - angle)) * RAD2DEG;
                             
                             score = score + 5;
+                            NewScores(points, logs[i].x, logs[i].y - 10, 5);
                             NewLog(logs, log1x, log1y, 1, obj2NewSpeed, log1degrees);
                             NewLog(logs, log2x, log2y, 2, obj2NewSpeed, log2degrees);
                             
@@ -939,6 +995,7 @@ void UpdateLogs(Sprite logs[], Sprite *player, Sprite bullits[]) {
                             
                         } else {
                             score = score + 10;
+                            NewScores(points, logs[i].x, logs[i].y - 10, 10);
                         }
                         
                         Vector2 explosionPosition = {logs[i].x, logs[i].y};  

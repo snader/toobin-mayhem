@@ -52,6 +52,7 @@ extern Sprite* birds;
 extern Sprite* shit;
 extern Sprite* logs;
 extern Sprite player;
+extern Sprite* points;
 extern Font konamiFont ;
 extern Sound splashSfxL;
 extern Sound splashSfxR;
@@ -64,11 +65,13 @@ extern Sound levelSfx;
 extern Sound gameOverSfx;
 extern Music music;
 extern float timePlayed;
+extern Font konamiFont;
 
 extern int DEAD;
 extern int ALIVE;
 extern int score;
 extern char levelText[50];
+extern Sprite* points;
 // Include raylib header
 
 

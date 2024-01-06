@@ -259,13 +259,13 @@ void UpdateGameplayScreen(void) {
     }     
 
     UpdatePlayerSprite(&player);  
-    UpdateDucks(duckies, &player, bullits, logs);
-    UpdateLogs(logs, &player, bullits);
+    UpdateDucks(duckies, &player, bullits, logs, points);
+    UpdateLogs(logs, &player, bullits, points);
     UpdateShit(shit, &player);
     UpdateBirds(birds, &player);
     UpdateExplosions();
     
-    if (ducksShot>=levelDuckCount[level] && currentScreen!=SCREEN_LEVEL) {
+    if (ducksShot>=levelDuckCount[level] && currentScreen!=SCREEN_LEVEL && frameCount==60) {
         SwitchGameScreen(SCREEN_LEVEL);
         level++;
     }
@@ -296,8 +296,10 @@ void DrawGameplayScreen(void) {
     DrawFullscreen(overlayTexture);  
     DrawShit(shit);   
     DrawBirds(birds);  
+    
      
     DrawEnergyBar(player);
+    DrawScores(points);  
     //DrawText(TextFormat("shit: %d", DucksAlive()), 10, 130, 20, WHITE);
         
 }
@@ -359,7 +361,7 @@ void UpdateGameoverScreen(void) {
         }     
     }
     //UpdatePlayerSprite(&player);   
-    UpdateDucks(duckies, &player, bullits, logs);
+    UpdateDucks(duckies, &player, bullits, logs, points);
     UpdateShit(shit, &player);
     UpdateBirds(birds, &player);
 }

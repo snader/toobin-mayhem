@@ -164,6 +164,7 @@ Sprite* birds = NULL;
 Sprite* shit = NULL;
 Sprite* logs = NULL;
 Sprite player; 
+Sprite* points = NULL;
 
 //----------------------------------------------------------------------------------
 // Module Functions Declaration
@@ -307,9 +308,14 @@ InitAudioDevice();
     logs = (Sprite*)malloc(8 * sizeof(Sprite));
     ripples = (Sprite*)malloc(10 * sizeof(Sprite));
     bullits = (Sprite*)malloc(50 * sizeof(Sprite));
+    points = (Sprite*)malloc(25 * sizeof(Sprite));
     
     for (int i = 0; i < 49; i++) {
         bullits[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
+    }
+    
+    for (int i = 0; i < 25; i++) {
+        points[i] = (Sprite){1, 100, 100, 0.0f, 0.0f, 0, 0, DEAD};
     }
     
     for (int i = 1; i < nrOfDucks; i++) {
@@ -487,6 +493,7 @@ InitAudioDevice();
     free(birds);
     free(shit);
     free(logs);
+    free(points);
        
     CloseAudioDevice();   
 
