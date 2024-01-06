@@ -36,7 +36,9 @@ _TODO: Show your game to the world, animated GIFs recommended!._
 
 ### Links
 
- - itch.io Release: [https://nobitgames.itch.io/toobin-mayhem](https://nobitgames.itch.io/toobin-mayhem) 
+ - itch.io Release: [https://nobitgames.itch.io/toobin-mayhem](https://nobitgames.itch.io/toobin-mayhem)
+ - Raylib: [https://raylib.com](https://raylib.com)
+ - Raylib Slo-Jam: [https://itch.io/jam/raylib-slo-jam](https://itch.io/jam/raylib-slo-jam) 
 
 ### License
 
