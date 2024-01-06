@@ -1,6 +1,6 @@
 ## $(Game Title)
 
-![$(Game Title)](screenshots/screenshot000.png "$(Toobin' Mayhem)")
+![$(Game Title)](screenshots/screenshotTitle.png "$(Game Title)")
 
 ### Description
 
@@ -16,8 +16,8 @@ $(Game for the raylib 9 years gamejam. Based on Toobin' arcade game and Asteroid
 
 Keyboard:
  - $(SPACE)
- - $(Game Control 02)
- - $(Game Control 03)
+ - $(ARROWS)
+ - $(CTRL)
 
 ### Screenshots
 
@@ -30,9 +30,7 @@ _TODO: Show your game to the world, animated GIFs recommended!._
 
 ### Links
 
- - YouTube Gameplay: $(YouTube Link)
  - itch.io Release: $(itch.io Game Page)
- - Steam Release: $(Steam Game Page)
 
 ### License
 
