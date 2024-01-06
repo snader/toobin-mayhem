@@ -1,10 +1,10 @@
 ## $(Game Title)
 
-![$(Game Title)](screenshots/screenshotTitle.png "$(Game Title)")
+![Toobin' Mayhem](screenshots/screenshotTitle.png "$(Toobin' Mayhem)")
 
 ### Description
 
-$(Game for the raylib 9 years gamejam. Based on Toobin' arcade game and Asteroids arcade game.)
+Game for the raylib 9 years gamejam. Based on Toobin' arcade game and Asteroids arcade game.
 
 ### Features
 
@@ -15,9 +15,10 @@ $(Game for the raylib 9 years gamejam. Based on Toobin' arcade game and Asteroid
 ### Controls
 
 Keyboard:
- - $(SPACE)
- - $(ARROWS)
- - $(CTRL)
+ - SPACE
+ - ARROWS UP/DOWN = Move forward/backward
+ - ARROWS LEFT/RIGHT = Turn left/right
+ - CTRL - Shoot
 
 ### Screenshots
 
@@ -25,7 +26,7 @@ _TODO: Show your game to the world, animated GIFs recommended!._
 
 ### Developers
 
- - $(Sander Voorn) - $(Developer)
+ - Sander Voorn 
 
 
 ### Links
